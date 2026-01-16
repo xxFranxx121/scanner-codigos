@@ -1,27 +1,24 @@
 // ===============================
 // DOM
 // ===============================
+const video = document.createElement("video");
+video.style.width = "100%";
+document.getElementById("reader").appendChild(video);
+
 const lista = document.getElementById("lista");
 const contador = document.getElementById("contador");
 const btnLimpiar = document.getElementById("limpiar");
 
 // ===============================
-// Configuración
-// ===============================
-const COOLDOWN_MS = 3000;
-
-// ===============================
 // Estado
 // ===============================
-let codigos = new Set(JSON.parse(localStorage.getItem("codigos")) || []);
+const COOLDOWN_MS = 3000;
 let ultimoCodigo = null;
 let ultimoTiempo = 0;
 
-// ===============================
-// Init
-// ===============================
+let codigos = new Set(JSON.parse(localStorage.getItem("codigos")) || []);
 contador.textContent = codigos.size;
-codigos.forEach(code => agregarALaLista(code));
+codigos.forEach(c => agregarALaLista(c));
 
 // ===============================
 // Funciones
@@ -37,50 +34,42 @@ function agregarALaLista(code) {
   lista.appendChild(li);
 }
 
-function agregarCodigo(texto) {
+function procesarCodigo(text) {
   const ahora = Date.now();
 
-  // Evitar lecturas repetidas inmediatas
-  if (texto === ultimoCodigo && (ahora - ultimoTiempo) < COOLDOWN_MS) {
+  if (text === ultimoCodigo && ahora - ultimoTiempo < COOLDOWN_MS) {
     return;
   }
 
-  ultimoCodigo = texto;
+  ultimoCodigo = text;
   ultimoTiempo = ahora;
 
-  // SOLO números de 6 dígitos (como 912803)
-  if (!/^\d{6}$/.test(texto)) {
-    console.log("Ignorado:", texto);
+  // SOLO 6 dígitos
+  if (!/^\d{6}$/.test(text)) return;
+
+  if (codigos.has(text)) {
+    alert("⚠ Código repetido: " + text);
     return;
   }
 
-  if (codigos.has(texto)) {
-    alert("⚠ Código repetido: " + texto);
-    return;
-  }
-
-  codigos.add(texto);
-  agregarALaLista(texto);
+  codigos.add(text);
+  agregarALaLista(text);
   guardar();
 }
 
 // ===============================
-// Scanner (CONFIG CLAVE)
+// ZXing Scanner
 // ===============================
-const scanner = new Html5Qrcode("reader");
+const codeReader = new ZXing.BrowserMultiFormatReader();
 
-scanner.start(
-  { facingMode: "environment" },
-  {
-    fps: 3, // lento y estable
-    qrbox: { width: 320, height: 120 }, // RECTANGULAR PARA BARRAS
-    formatsToSupport: [
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.CODE_128
-    ]
-  },
-  (text) => agregarCodigo(text),
-  () => {}
+codeReader.decodeFromVideoDevice(
+  null, // cámara trasera automática
+  video,
+  (result, err) => {
+    if (result) {
+      procesarCodigo(result.text);
+    }
+  }
 );
 
 // ===============================
