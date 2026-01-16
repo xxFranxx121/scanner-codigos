@@ -1,22 +1,31 @@
 // ===============================
 // DOM
 // ===============================
-const video = document.createElement("video");
-video.style.width = "100%";
-document.getElementById("reader").appendChild(video);
-
+const readerDiv = document.getElementById("reader");
+const btnIniciar = document.getElementById("btnIniciar");
 const lista = document.getElementById("lista");
 const contador = document.getElementById("contador");
 const btnLimpiar = document.getElementById("limpiar");
 
+// Crear video correctamente
+const video = document.createElement("video");
+video.setAttribute("playsinline", true); // CLAVE para iOS
+video.style.width = "100%";
+readerDiv.appendChild(video);
+
+// ===============================
+// Configuración
+// ===============================
+const COOLDOWN_MS = 3000;
+
 // ===============================
 // Estado
 // ===============================
-const COOLDOWN_MS = 3000;
+let codigos = new Set(JSON.parse(localStorage.getItem("codigos")) || []);
 let ultimoCodigo = null;
 let ultimoTiempo = 0;
+let lectorActivo = false;
 
-let codigos = new Set(JSON.parse(localStorage.getItem("codigos")) || []);
 contador.textContent = codigos.size;
 codigos.forEach(c => agregarALaLista(c));
 
@@ -58,19 +67,35 @@ function procesarCodigo(text) {
 }
 
 // ===============================
-// ZXing Scanner
+// ZXing
 // ===============================
 const codeReader = new ZXing.BrowserMultiFormatReader();
 
-codeReader.decodeFromVideoDevice(
-  null, // cámara trasera automática
-  video,
-  (result, err) => {
-    if (result) {
-      procesarCodigo(result.text);
-    }
+btnIniciar.addEventListener("click", async () => {
+  if (lectorActivo) return;
+
+  try {
+    lectorActivo = true;
+    btnIniciar.disabled = true;
+    btnIniciar.textContent = "📷 Cámara activa";
+
+    await codeReader.decodeFromVideoDevice(
+      null, // cámara trasera automática
+      video,
+      (result, err) => {
+        if (result) {
+          procesarCodigo(result.text);
+        }
+      }
+    );
+  } catch (e) {
+    alert("No se pudo acceder a la cámara");
+    console.error(e);
+    lectorActivo = false;
+    btnIniciar.disabled = false;
+    btnIniciar.textContent = "📷 Iniciar cámara";
   }
-);
+});
 
 // ===============================
 // Limpiar
