@@ -45,3 +45,11 @@ button {
   background: #dc3545;
   color: white;
 }
+
+#reader video {
+  width: 100%;
+  height: 200px;
+  background: black;
+  object-fit: cover;
+  border-radius: 8px;
+}

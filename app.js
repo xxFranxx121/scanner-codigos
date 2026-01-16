@@ -9,9 +9,14 @@ const btnLimpiar = document.getElementById("limpiar");
 
 // Crear video correctamente
 const video = document.createElement("video");
-video.setAttribute("playsinline", true); // CLAVE para iOS
+video.setAttribute("playsinline", true);
+video.setAttribute("autoplay", true);
+video.setAttribute("muted", true);
 video.style.width = "100%";
+video.style.height = "200px";
+video.style.background = "black";
 readerDiv.appendChild(video);
+
 
 // ===============================
 // Configuración
