@@ -1,5 +1,5 @@
 // ===============================
-// Referencias al DOM
+// DOM
 // ===============================
 const lista = document.getElementById("lista");
 const contador = document.getElementById("contador");
@@ -8,7 +8,7 @@ const btnLimpiar = document.getElementById("limpiar");
 // ===============================
 // Configuración
 // ===============================
-const COOLDOWN_MS = 2500; // tiempo mínimo entre lecturas (ms)
+const COOLDOWN_MS = 3000;
 
 // ===============================
 // Estado
@@ -18,11 +18,9 @@ let ultimoCodigo = null;
 let ultimoTiempo = 0;
 
 // ===============================
-// Inicialización
+// Init
 // ===============================
 contador.textContent = codigos.size;
-
-// Mostrar códigos guardados al cargar
 codigos.forEach(code => agregarALaLista(code));
 
 // ===============================
@@ -39,63 +37,57 @@ function agregarALaLista(code) {
   lista.appendChild(li);
 }
 
-function agregarCodigo(code) {
+function agregarCodigo(texto) {
   const ahora = Date.now();
 
-  // Cooldown: evita lecturas seguidas del mismo código
-  if (code === ultimoCodigo && (ahora - ultimoTiempo) < COOLDOWN_MS) {
+  // Evitar lecturas repetidas inmediatas
+  if (texto === ultimoCodigo && (ahora - ultimoTiempo) < COOLDOWN_MS) {
     return;
   }
 
-  ultimoCodigo = code;
+  ultimoCodigo = texto;
   ultimoTiempo = ahora;
 
-  // SOLO códigos numéricos de 6 dígitos
-  if (!/^\d{6}$/.test(code)) {
-    console.log("Código ignorado:", code);
+  // SOLO números de 6 dígitos (como 912803)
+  if (!/^\d{6}$/.test(texto)) {
+    console.log("Ignorado:", texto);
     return;
   }
 
-  // Detectar duplicado real
-  if (codigos.has(code)) {
-    alert("⚠ Código repetido: " + code);
+  if (codigos.has(texto)) {
+    alert("⚠ Código repetido: " + texto);
     return;
   }
 
-  // Agregar código nuevo
-  codigos.add(code);
-  agregarALaLista(code);
+  codigos.add(texto);
+  agregarALaLista(texto);
   guardar();
 }
 
 // ===============================
-// Inicializar escáner
+// Scanner (CONFIG CLAVE)
 // ===============================
 const scanner = new Html5Qrcode("reader");
 
 scanner.start(
   { facingMode: "environment" },
   {
-    fps: 5,          // escaneo más lento
-    qrbox: 250,
+    fps: 3, // lento y estable
+    qrbox: { width: 320, height: 120 }, // RECTANGULAR PARA BARRAS
     formatsToSupport: [
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.CODE_39
+      Html5QrcodeSupportedFormats.CODE_39,
+      Html5QrcodeSupportedFormats.CODE_128
     ]
   },
   (text) => agregarCodigo(text),
-  (error) => {
-    // errores ignorados para no ensuciar consola
-  }
+  () => {}
 );
 
 // ===============================
-// Botón limpiar
+// Limpiar
 // ===============================
 btnLimpiar.addEventListener("click", () => {
-  if (confirm("¿Seguro que querés borrar todos los códigos?")) {
+  if (confirm("¿Borrar todos los códigos?")) {
     codigos.clear();
     lista.innerHTML = "";
     guardar();
