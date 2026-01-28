@@ -36,22 +36,33 @@ function agregarCodigo(code) {
 // Formatos soportados (Barcodes + QR)
 const formatsToSupport = [
   Html5QrcodeSupportedFormats.QR_CODE,
-  Html5QrcodeSupportedFormats.UPC_A,
-  Html5QrcodeSupportedFormats.UPC_E,
-  Html5QrcodeSupportedFormats.EAN_13,
-  Html5QrcodeSupportedFormats.EAN_8,
   Html5QrcodeSupportedFormats.CODE_128,
   Html5QrcodeSupportedFormats.CODE_39,
-  Html5QrcodeSupportedFormats.ITF
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.EAN_8,
+  Html5QrcodeSupportedFormats.ITF,
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,
+  Html5QrcodeSupportedFormats.CODABAR
 ];
 
-// Inicializar escáner con los formatos habilitados
-const scanner = new Html5Qrcode("reader", { formatsToSupport: formatsToSupport });
+// Inicializar escáner (el segundo parámetro es para verbose/debug si fuera necesario)
+const scanner = new Html5Qrcode("reader", { verbose: false });
 
 const config = {
-  fps: 10,
-  qrbox: { width: 300, height: 150 }, // Caja rectangular para códigos de barra
-  aspectRatio: 1.0
+  fps: 20, // Mayor velocidad de escaneo
+  qrbox: (viewfinderWidth, viewfinderHeight) => {
+    // Caja dinámica: 85% del ancho y 40% del alto para códigos de barra largos
+    return {
+      width: Math.min(viewfinderWidth * 0.85, 400),
+      height: Math.min(viewfinderHeight * 0.4, 200)
+    };
+  },
+  aspectRatio: 1.777778, // Proporción 16:9 común en cámaras para ver más ancho
+  formatsToSupport: formatsToSupport,
+  experimentalFeatures: {
+    useBarCodeDetectorIfSupported: true // Usa API nativa del navegador si está disponible (más rápido)
+  }
 };
 
 scanner.start(
@@ -61,10 +72,12 @@ scanner.start(
     if (text !== ultimoCodigo) {
       ultimoCodigo = text;
       agregarCodigo(text);
-      setTimeout(() => { ultimoCodigo = null; }, 2000);
+      setTimeout(() => { ultimoCodigo = null; }, 2500); // Cooldown ligeramente mayor
     }
   },
-  (err) => { }
+  (err) => {
+    // Errores de "no detectado" ocurren en cada frame, los ignoramos para no saturar
+  }
 );
 
 // Limpiar todo
