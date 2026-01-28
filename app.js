@@ -2,6 +2,8 @@ const lista = document.getElementById("lista");
 const contador = document.getElementById("contador");
 const btnLimpiar = document.getElementById("limpiar");
 
+let ultimoCodigo = null;
+
 // Cargar desde localStorage
 let codigos = new Set(JSON.parse(localStorage.getItem("codigos")) || []);
 contador.textContent = codigos.size;
@@ -31,13 +33,37 @@ function agregarCodigo(code) {
   guardar();
 }
 
-// Inicializar escáner
-const scanner = new Html5Qrcode("reader");
+// Formatos soportados (Barcodes + QR)
+const formatsToSupport = [
+  Html5QrcodeSupportedFormats.QR_CODE,
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.EAN_8,
+  Html5QrcodeSupportedFormats.CODE_128,
+  Html5QrcodeSupportedFormats.CODE_39,
+  Html5QrcodeSupportedFormats.ITF
+];
+
+// Inicializar escáner con los formatos habilitados
+const scanner = new Html5Qrcode("reader", { formatsToSupport: formatsToSupport });
+
+const config = {
+  fps: 10,
+  qrbox: { width: 300, height: 150 }, // Caja rectangular para códigos de barra
+  aspectRatio: 1.0
+};
 
 scanner.start(
   { facingMode: "environment" },
-  { fps: 10, qrbox: 220 },
-  (text) => agregarCodigo(text),
+  config,
+  (text) => {
+    if (text !== ultimoCodigo) {
+      ultimoCodigo = text;
+      agregarCodigo(text);
+      setTimeout(() => { ultimoCodigo = null; }, 2000);
+    }
+  },
   (err) => { }
 );
 
