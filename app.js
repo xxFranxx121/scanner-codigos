@@ -13,8 +13,10 @@ video.setAttribute("playsinline", true);
 video.setAttribute("autoplay", true);
 video.setAttribute("muted", true);
 video.style.width = "100%";
-video.style.height = "200px";
+video.style.height = "350px";
 video.style.background = "black";
+video.style.borderRadius = "8px";
+video.style.objectFit = "cover";
 readerDiv.appendChild(video);
 
 
@@ -58,8 +60,11 @@ function procesarCodigo(text) {
   ultimoCodigo = text;
   ultimoTiempo = ahora;
 
-  // SOLO 6 dígitos
-  if (!/^\d{6}$/.test(text)) return;
+  // Permitir códigos numéricos de entre 6 y 20 dígitos
+  if (!/^\d{6,20}$/.test(text)) {
+    console.log("Código ignorado por formato:", text);
+    return;
+  }
 
   if (codigos.has(text)) {
     alert("⚠ Código repetido: " + text);
