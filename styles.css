@@ -32,7 +32,7 @@ li {
   padding: 8px;
   border-radius: 6px;
   font-size: 16px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 button {
@@ -44,12 +44,4 @@ button {
   border-radius: 6px;
   background: #dc3545;
   color: white;
-}
-
-#reader video {
-  width: 100%;
-  height: 200px;
-  background: black;
-  object-fit: cover;
-  border-radius: 8px;
 }
