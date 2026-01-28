@@ -83,14 +83,32 @@ const codeReader = new ZXing.BrowserMultiFormatReader();
 
 btnIniciar.addEventListener("click", async () => {
   if (lectorActivo) return;
+  iniciarEscaneo();
+});
 
+async function iniciarEscaneo() {
   try {
+    const videoInputDevices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+
+    // Intentar encontrar la cámara trasera
+    let selectedDeviceId = videoInputDevices[0].deviceId;
+
+    const backCamera = videoInputDevices.find(device =>
+      device.label.toLowerCase().includes('back') ||
+      device.label.toLowerCase().includes('trasera') ||
+      device.label.toLowerCase().includes('rear')
+    );
+
+    if (backCamera) {
+      selectedDeviceId = backCamera.deviceId;
+    }
+
     lectorActivo = true;
     btnIniciar.disabled = true;
     btnIniciar.textContent = "📷 Cámara activa";
 
     await codeReader.decodeFromVideoDevice(
-      null, // cámara trasera automática
+      selectedDeviceId,
       video,
       (result, err) => {
         if (result) {
@@ -99,12 +117,19 @@ btnIniciar.addEventListener("click", async () => {
       }
     );
   } catch (e) {
-    alert("No se pudo acceder a la cámara");
     console.error(e);
+    alert("Error: Asegúrate de dar permisos de cámara.");
     lectorActivo = false;
     btnIniciar.disabled = false;
     btnIniciar.textContent = "📷 Iniciar cámara";
   }
+}
+
+// Intentar iniciar automáticamente si el navegador lo permite
+window.addEventListener('load', () => {
+  iniciarEscaneo().catch(() => {
+    console.log("Auto-inicio bloqueado por el navegador, se requiere interacción manual.");
+  });
 });
 
 // ===============================
