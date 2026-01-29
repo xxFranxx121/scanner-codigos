@@ -3,30 +3,28 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scanner de Códigos</title>
+  <title>Escáner Código de Barras</title>
+  <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+  <style>
+    #scanner {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+    }
 
-  <link rel="stylesheet" href="styles.css" />
-
-  <!-- Librería de escaneo -->
-  <script src="https://unpkg.com/html5-qrcode"></script>
+    video {
+      width: 100%;
+    }
+  </style>
 </head>
 
 <body>
 
-  <h2>📷 Escanear código</h2>
+  <h2>Escanear código</h2>
+  <div id="scanner"></div>
+  <p><b>Resultado:</b> <span id="result">---</span></p>
 
-  <div id="reader"></div>
-
-  <div class="info">
-    <p>Total escaneados: <strong id="contador">0</strong></p>
-  </div>
-
-  <ul id="lista"></ul>
-
-  <button id="limpiar">🗑 Limpiar todo</button>
-
-  <script src="app.js"></script>
+  <script src="scanner.js"></script>
 </body>
 
 </html>
