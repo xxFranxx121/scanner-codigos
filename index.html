@@ -2,13 +2,14 @@
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8" />
-  <title>Escáner Código de Barras</title>
+  <meta charset="UTF-8">
+  <title>Escáner Code 128</title>
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+
   <style>
     #scanner {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       margin: auto;
     }
 
@@ -20,11 +21,44 @@
 
 <body>
 
-  <h2>Escanear código</h2>
+  <h3>Escaneá el código</h3>
   <div id="scanner"></div>
-  <p><b>Resultado:</b> <span id="result">---</span></p>
+  <p>Resultado: <span id="output">---</span></p>
 
-  <script src="scanner.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: document.querySelector('#scanner'),
+          constraints: {
+            facingMode: { exact: "environment" }
+          }
+        },
+        decoder: {
+          readers: ["code_128_reader"]
+        },
+        locate: true
+      }, function (err) {
+        if (err) {
+          console.error(err);
+          alert("Error al iniciar cámara");
+          return;
+        }
+        Quagga.start();
+      });
+
+      Quagga.onDetected(data => {
+        const code = data.codeResult.code;
+        document.getElementById("output").innerText = code;
+        Quagga.stop();
+      });
+
+    });
+  </script>
+
 </body>
 
 </html>
