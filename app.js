@@ -2,6 +2,8 @@ const lista = document.getElementById("lista");
 const contador = document.getElementById("contador");
 const btnLimpiar = document.getElementById("limpiar");
 const ultimoEscaneado = document.getElementById("ultimo-escaneado");
+const btnFoto = document.getElementById("btn-foto");
+const fileInput = document.getElementById("file-input");
 
 let ultimoCodigo = null;
 let ultimoTiempo = 0;
@@ -22,66 +24,66 @@ function guardar() {
 function agregarALaLista(code) {
   const li = document.createElement("li");
   li.textContent = code;
-  // Insertar al principio para ver el más nuevo arriba
   lista.insertBefore(li, lista.firstChild);
 }
 
 function procesarDeteccion(code) {
-  const ahora = Date.now();
+  if (!code) return;
 
-  // Evitar duplicados rápidos
-  if (code === ultimoCodigo && ahora - ultimoTiempo < COOLDOWN_MS) {
-    return;
-  }
+  const ahora = Date.now();
+  if (code === ultimoCodigo && ahora - ultimoTiempo < COOLDOWN_MS) return;
 
   ultimoCodigo = code;
   ultimoTiempo = ahora;
   ultimoEscaneado.textContent = code;
 
-  if (codigos.has(code)) {
-    // Ya existe, no lo agregamos pero actualizamos el visual
-    return;
-  }
+  if (codigos.has(code)) return;
 
   codigos.add(code);
   agregarALaLista(code);
   guardar();
 
-  // Feedback visual breve
   ultimoEscaneado.style.color = "green";
-  setTimeout(() => { ultimoEscaneado.style.color = "black"; }, 1000);
+  setTimeout(() => { ultimoEscaneado.style.color = "#1a73e8"; }, 1000);
 }
 
-// Configuración de Quagga para Code 39
-Quagga.init({
-  inputStream: {
-    name: "Live",
-    type: "LiveStream",
-    target: document.querySelector('#scanner-container'),
-    constraints: {
-      width: 480,
-      height: 320,
-      facingMode: "environment" // cámara trasera
+// Configuración OPTIMIZADA de Quagga (Alta Resolución)
+function iniciarQuagga() {
+  Quagga.init({
+    inputStream: {
+      name: "Live",
+      type: "LiveStream",
+      target: document.querySelector('#scanner-container'),
+      constraints: {
+        width: { min: 640, ideal: 1280 },
+        height: { min: 480, ideal: 720 },
+        facingMode: "environment"
+      },
+      area: { // Restringir el área de escaneado al centro para mayor precisión
+        top: "20%",
+        right: "10%",
+        left: "10%",
+        bottom: "20%"
+      }
     },
-  },
-  locator: {
-    patchSize: "medium",
-    halfSample: true
-  },
-  numOfWorkers: 2,
-  decoder: {
-    readers: ["code_39_reader"] // Configurado para Code 39 Standard
-  },
-  locate: true
-}, function (err) {
-  if (err) {
-    console.error(err);
-    alert("Error al iniciar cámara: " + err);
-    return;
-  }
-  console.log("Quagga iniciado correctamente");
-  Quagga.start();
-});
+    locator: {
+      patchSize: "medium", // Ajuste para códigos de barra de tamaño medio
+      halfSample: false    // Mejor precisión (desactiva el escalado a la mitad)
+    },
+    numOfWorkers: navigator.hardwareConcurrency || 4,
+    decoder: {
+      readers: ["code_39_reader"]
+    },
+    locate: true
+  }, function (err) {
+    if (err) {
+      console.error(err);
+      alert("Error: Asegúrate de usar HTTPS y dar permisos de cámara.");
+      return;
+    }
+    Quagga.start();
+  });
+}
 
 Quagga.onDetected(function (data) {
   const code = data.codeResult.code;
@@ -90,12 +92,44 @@ Quagga.onDetected(function (data) {
   }
 });
 
-// Limpiar todo
+// ESCANEO POR FOTO (Fallback como Aspose)
+btnFoto.addEventListener("click", () => fileInput.click());
+
+fileInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    // Procesar la imagen con Quagga (Decodificación estática)
+    Quagga.decodeSingle({
+      src: event.target.result,
+      numOfWorkers: 0,
+      decoder: {
+        readers: ["code_39_reader"]
+      },
+      locate: true,
+      src: event.target.result
+    }, function (result) {
+      if (result && result.codeResult) {
+        procesarDeteccion(result.codeResult.code);
+      } else {
+        alert("No se detectó código en la imagen. Intenta que esté bien enfocada y centrada.");
+      }
+    });
+  };
+  reader.readAsDataURL(file);
+});
+
+// Limpiar
 btnLimpiar.addEventListener("click", () => {
-  if (confirm("¿Seguro que querés borrar todos los códigos?")) {
+  if (confirm("¿Borrar historial?")) {
     codigos.clear();
     lista.innerHTML = "";
     guardar();
     ultimoEscaneado.textContent = "---";
   }
 });
+
+// Iniciar al cargar
+window.addEventListener('load', iniciarQuagga);

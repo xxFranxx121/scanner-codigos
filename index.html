@@ -23,9 +23,13 @@
     <p>Último: <span id="ultimo-escaneado">---</span></p>
   </div>
 
-  <ul id="lista"></ul>
+  <div class="actions">
+    <button id="btn-foto">📁 Subir foto (como Aspose)</button>
+    <input type="file" id="file-input" accept="image/*" style="display: none;">
+    <button id="limpiar" class="btn-danger">🗑 Limpiar todo</button>
+  </div>
 
-  <button id="limpiar">🗑 Limpiar todo</button>
+  <ul id="lista"></ul>
 
   <script src="app.js"></script>
 </body>
