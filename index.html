@@ -3,62 +3,31 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Escáner Code 128</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escáner de Facturación</title>
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Librería QuaggaJS -->
   <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
-
-  <style>
-    #scanner {
-      width: 100%;
-      max-width: 420px;
-      margin: auto;
-    }
-
-    video {
-      width: 100%;
-    }
-  </style>
 </head>
 
 <body>
 
-  <h3>Escaneá el código</h3>
-  <div id="scanner"></div>
-  <p>Resultado: <span id="output">---</span></p>
+  <h2>📷 Escanear Código (Code 39)</h2>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
+  <div id="scanner-container"></div>
 
-      Quagga.init({
-        inputStream: {
-          name: "Live",
-          type: "LiveStream",
-          target: document.querySelector('#scanner'),
-          constraints: {
-            facingMode: { exact: "environment" }
-          }
-        },
-        decoder: {
-          readers: ["code_128_reader"]
-        },
-        locate: true
-      }, function (err) {
-        if (err) {
-          console.error(err);
-          alert("Error al iniciar cámara");
-          return;
-        }
-        Quagga.start();
-      });
+  <div class="info">
+    <p>Total escaneados: <strong id="contador">0</strong></p>
+    <p>Último: <span id="ultimo-escaneado">---</span></p>
+  </div>
 
-      Quagga.onDetected(data => {
-        const code = data.codeResult.code;
-        document.getElementById("output").innerText = code;
-        Quagga.stop();
-      });
+  <ul id="lista"></ul>
 
-    });
-  </script>
+  <button id="limpiar">🗑 Limpiar todo</button>
 
+  <script src="app.js"></script>
 </body>
 
 </html>
