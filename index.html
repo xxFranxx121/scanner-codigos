@@ -193,10 +193,10 @@
 
   <script>
     // Variables globales para el modal
-    let pendingDocId = null;
+    window.pendingDocId = null;
 
     window.openDeleteModal = function (docId) {
-      pendingDocId = docId;
+      window.pendingDocId = docId;
       const modal = document.getElementById("auth-modal");
       const input = document.getElementById("admin-pass");
 
@@ -207,7 +207,7 @@
 
     window.closeModal = function () {
       document.getElementById("auth-modal").style.display = "none";
-      pendingDocId = null;
+      window.pendingDocId = null;
     }
   </script>
 
