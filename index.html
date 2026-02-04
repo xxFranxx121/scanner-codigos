@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Lector Code 39</title>
@@ -7,7 +8,7 @@
 
   <!-- Librería -->
   <script src="https://unpkg.com/html5-qrcode"></script>
-  
+
 
   <style>
     body {
@@ -48,6 +49,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <h1>📦 Lector Code 39</h1>
@@ -65,61 +67,141 @@
 
 
 
-<script>
-const resultDiv = document.getElementById("result");
-const readerId = "reader";
 
-const html5QrCode = new Html5Qrcode(readerId);
+  <script type="module">
+    // Importar Firebase (versión modular)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from
+      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function startScanner() {
-  await html5QrCode.start(
-    { facingMode: "environment" },
-    {
-      fps: 10,
-      qrbox: { width: 320, height: 160 },
-      formatsToSupport: [ Html5QrcodeSupportedFormats.CODE_39 ]
-    },
-    (decodedText) => {
-      resultDiv.innerHTML = "✅ Código leído:<br><b>" + decodedText + "</b>";
-      html5QrCode.stop();
-    }
-  );
-
-  // 🔥 CLAVE PARA iOS
-  await sleep(2200);
-
-  try {
-    const caps = html5QrCode.getRunningTrackCapabilities();
-
-    const zoom = caps.zoom
-      ? Math.min(caps.zoom.max || caps.zoom, 2.0)
-      : null;
-
-    const constraints = {
-      width: { ideal: 1000 },
-      height: { ideal: 1000 },
-      frameRate: { ideal: caps.frameRate?.max || 30 },
-      advanced: [
-        ...(zoom ? [{ zoom }] : []),
-        ...(caps.focusDistance ? [{ focusDistance: 1 }] : [])
-      ]
+    // --- CONFIGURACIÓN DE FIREBASE ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyDjdlGGTm_bmTO9ETXIHe4VidA1k9my_nY",
+      authDomain: "code39-optimi.firebaseapp.com",
+      projectId: "code39-optimi",
+      storageBucket: "code39-optimi.firebasestorage.app",
+      messagingSenderId: "58310943950",
+      appId: "1:58310943950:web:0226916396780699365c9f"
     };
 
-    await html5QrCode.applyVideoConstraints(constraints);
-    console.log("✅ Video constraints aplicadas (iOS fix)");
-  } catch (e) {
-    console.warn("No se pudieron aplicar constraints:", e);
-  }
-}
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const CODES_COLLECTION = "codigos_barras"; // Nombre de la colección en la base de datos
 
-startScanner();
-</script>
+    const resultDiv = document.getElementById("result");
+    const readerId = "reader";
+
+    const html5QrCode = new Html5Qrcode(readerId);
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Función para guardar en la base de datos
+    async function checkAndSaveCode(code) {
+      resultDiv.innerHTML = `⏳ Verificando código <b>${code}</b>...`;
+
+      try {
+        const codesRef = collection(db, CODES_COLLECTION);
+
+        // 1. Buscar duplicados
+        const q = query(codesRef, where("code", "==", code));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          // Ya existe
+          resultDiv.innerHTML = `
+  <div style="color: #ff4444; font-weight: bold;">
+    ⛔ ERROR: DUPLICADO
+  </div>
+  <div style="font-size: 0.8em; margin-top: 5px;">
+    El código <b>${code}</b> ya existe en la base de datos.
+  </div>
+  <button onclick="restartScanner()"
+    style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#444; color:white; cursor:pointer;">Escanear
+    otro</button>
+  `;
+          return;
+        }
+
+        // 2. Si no existe, guardar
+        await addDoc(codesRef, {
+          code: code,
+          timestamp: serverTimestamp(),
+          device: navigator.userAgent // Opcional: saber desde qué disp. se escaneó
+        });
+
+        resultDiv.innerHTML = `
+  <div style="color: #00ff99; font-weight: bold;">
+    ✅ GUARDADO EXITOSAMENTE
+  </div>
+  <div style="font-size: 0.8em; margin-top: 5px;">
+    Código: <b>${code}</b>
+  </div>
+  <button onclick="restartScanner()"
+    style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#00ff99; color:black; font-weight:bold; cursor:pointer;">Siguiente
+    ▶</button>
+  `;
+
+      } catch (error) {
+        console.error("Error Firebase:", error);
+        resultDiv.innerHTML = `❌ Error de conexión: ${error.message}`;
+        // Si falla la config, mostrar aviso
+        if (error.message.includes("api-key")) {
+          resultDiv.innerHTML += "<br><small>⚠️ Falta configurar las claves de Firebase en el código.</small>";
+        }
+      }
+    }
+
+    // Función expuesta al window para el botón de html
+    window.restartScanner = function () {
+      resultDiv.innerHTML = "Esperando lectura...";
+      startScanner();
+    }
+
+    async function startScanner() {
+      // Pequeña pausa para asegurar que el DOM esté listo si se llama rápido
+      await sleep(500);
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 320, height: 160 },
+          formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39]
+        },
+        (decodedText) => {
+          // Pausar escaneo al detectar uno
+          html5QrCode.stop().then(() => {
+            checkAndSaveCode(decodedText);
+          }).catch(err => console.error("Error al detener", err));
+        }
+      ).catch(err => {
+        // Manejo de error de inicio de cámara
+        console.warn("Error iniciando cámara", err);
+      });
+
+      // Hotfix para iOS zoom/focus
+      await sleep(2000);
+      try {
+        // Intento de aplicar capacidades avanzadas si está corriendo
+        if (html5QrCode.isScanning) {
+          const caps = html5QrCode.getRunningTrackCapabilities();
+          const constraints = { advanced: [{ zoom: 2.0 }] }; // Simplificado
+          await html5QrCode.applyVideoConstraints(constraints);
+        }
+      } catch (e) {
+        console.log("No se pudo aplicar zoom automatico", e);
+      }
+    }
+
+    // Iniciar al cargar
+    startScanner();
 
 
 
-</body>
-</html>
+
+</body >
+
+</html >
