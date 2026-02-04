@@ -3,8 +3,8 @@
   "short_name": "Scanner39",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#111111",
-  "theme_color": "#00ff99",
+  "background_color": "#ffffff",
+  "theme_color": "#9e2a2b",
   "icons": [
     {
       "src": "icon.png",
