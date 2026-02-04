@@ -163,10 +163,53 @@
     ✔ Sistema optimizado para Códigos 39.
   </p>
 
+  <div id="auth-modal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div
+      style="background:white; padding:25px; border-radius:12px; width:85%; max-width:320px; text-align:center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-top: 6px solid #9e2a2b;">
+      <h3 style="margin-top:0; color:#9e2a2b; border:none;">🔐 Acceso Admin</h3>
+      <p style="color:#666; font-size:14px;">Para eliminar el registro, ingrese la clave:</p>
+
+      <input type="number" id="admin-pass" placeholder="Clave (1234)"
+        style="width:100%; padding:12px; box-sizing:border-box; margin-bottom:20px; border:1px solid #ccc; border-radius:6px; font-size:18px; text-align:center;">
+
+      <div style="display:flex; justify-content:space-between; gap:10px;">
+        <button onclick="closeModal()"
+          style="flex:1; background:#f0f0f0; color:#333; border:none; padding:12px; border-radius:6px; font-weight:bold; cursor:pointer;">
+          Cancelar
+        </button>
+        <button onclick="window.confirmDelete()"
+          style="flex:1; background:#9e2a2b; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold; box-shadow: 0 2px 5px rgba(158,42,43,0.3); cursor:pointer;">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <footer>
     Desarrollado por <b>Francisco De Cilia</b><br>
     &copy; 2024 Laboratorio Optimi
   </footer>
+
+  <script>
+    // Variables globales para el modal
+    let pendingDocId = null;
+
+    window.openDeleteModal = function (docId) {
+      pendingDocId = docId;
+      const modal = document.getElementById("auth-modal");
+      const input = document.getElementById("admin-pass");
+
+      modal.style.display = "flex";
+      input.value = ""; // Limpiar
+      input.focus();
+    }
+
+    window.closeModal = function () {
+      document.getElementById("auth-modal").style.display = "none";
+      pendingDocId = null;
+    }
+  </script>
 
 
 
@@ -231,30 +274,47 @@
       });
     }
 
-    // Función global para eliminar
-    window.deleteCode = async function (docId) {
-      console.log("Intentando eliminar:", docId);
+    // Función llamada desde el botón de la lista
+    window.deleteCode = function (docId) {
+      // Abrir el modal visual (definido abajo)
+      if (window.openDeleteModal) {
+        window.openDeleteModal(docId);
+      } else {
+        alert("Error: Modal no cargado");
+      }
+    }
+
+    // Función llamada desde el botón "Confirmar" del modal
+    window.confirmDelete = async function () {
+      const input = document.getElementById("admin-pass");
+      const password = input.value;
+
+      // Verificar clave
+      if (password !== "1234") {
+        alert("⛔ CLAVE INCORRECTA");
+        input.value = "";
+        input.focus();
+        return;
+      }
+
+      // Obtener ID guardado en global
+      const docId = window.pendingDocId;
+      if (!docId) return;
 
       try {
-        const password = prompt("🔐 Ingrese contraseña de administrador para eliminar:");
-        if (password === null) return; // Cancelado por usuario
-
-        if (password !== "1234") {
-          alert("⛔ Contraseña incorrecta");
-          return;
-        }
-
         await deleteDoc(doc(db, CODES_COLLECTION, docId));
-        alert("✅ Eliminado correctamente");
+
+        // Cerrar modal y notificar
+        if (window.closeModal) window.closeModal();
+
+        // Mostrar toast o alerta pequeña
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
+        setTimeout(() => { resultDiv.innerHTML = "Esperando escaneo..."; }, 2000);
+
       } catch (e) {
         console.error(e);
         alert("Error al eliminar: " + e.message);
-        // Mostrar en log visual también
-        const log = document.getElementById("debug-log");
-        if (log) {
-          log.style.display = "block";
-          log.innerHTML += `<br>Error Delete: ${e.message}`;
-        }
       }
     }
 
