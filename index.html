@@ -145,73 +145,73 @@
   </script>
 
   <!-- 2. SCRIPT DEL SCANNER (LÓGICA ORIGINAL) -->
-  <script></script>
-  const resultDiv = document.getElementById("result");
-  const readerId = "reader";
-  const html5QrCode = new Html5Qrcode(readerId);
+  <script>
+    const resultDiv = document.getElementById("result");
+    const readerId = "reader";
+    const html5QrCode = new Html5Qrcode(readerId);
 
-  function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-  window.restartScanner = function () {
-  resultDiv.innerHTML = "Esperando lectura...";
-  document.getElementById("debug-log").style.display = "none";
-  startScanner();
-  }
+    window.restartScanner = function () {
+      resultDiv.innerHTML = "Esperando lectura...";
+      document.getElementById("debug-log").style.display = "none";
+      startScanner();
+    }
 
-  function logError(msg, err) {
-  console.error(msg, err);
-  const log = document.getElementById("debug-log");
-  log.style.display = "block";
-  log.innerHTML += `<p>${msg}: ${err?.message || err}</p>`;
-  }
+    function logError(msg, err) {
+      console.error(msg, err);
+      const log = document.getElementById("debug-log");
+      log.style.display = "block";
+      log.innerHTML += `<p>${msg}: ${err?.message || err}</p>`;
+    }
 
-  async function startScanner() {
-  // Intentar iniciar cámara
-  try {
-  await html5QrCode.start(
-  { facingMode: "environment" },
-  {
-  fps: 10,
-  qrbox: { width: 320, height: 160 },
-  formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39],
-  experimentalFeatures: {
-  useBarCodeDetectorIfSupported: true
-  }
-  },
-  (decodedText) => {
-  html5QrCode.stop().then(() => {
-  // Llamar a la función de Firebase (si existe) o mostrar alerta
-  if (window.checkAndSaveCode) {
-  window.checkAndSaveCode(decodedText);
-  } else {
-  alert("Base de datos no cargada aún. Código: " + decodedText);
-  }
-  });
-  }
-  );
-  } catch (err) {
-  logError("Error iniciando cámara", err);
-  resultDiv.innerHTML = "❌ Error de cámara (ver abajo)";
-  }
+    async function startScanner() {
+      // Intentar iniciar cámara
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 320, height: 160 },
+            formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39],
+            experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true
+            }
+          },
+          (decodedText) => {
+            html5QrCode.stop().then(() => {
+              // Llamar a la función de Firebase (si existe) o mostrar alerta
+              if (window.checkAndSaveCode) {
+                window.checkAndSaveCode(decodedText);
+              } else {
+                alert("Base de datos no cargada aún. Código: " + decodedText);
+              }
+            });
+          }
+        );
+      } catch (err) {
+        logError("Error iniciando cámara", err);
+        resultDiv.innerHTML = "❌ Error de cámara (ver abajo)";
+      }
 
-  // Intentar mejorar foco/zoom solo si está escaneando
-  try {
-  await sleep(1000);
-  if (html5QrCode.isScanning) {
-  const caps = html5QrCode.getRunningTrackCapabilities();
-  // Solo aplicar zoom si el dispositivo lo reporta
-  if (caps.zoom && caps.zoom.max > 1) {
-  await html5QrCode.applyVideoConstraints({ advanced: [{ zoom: Math.min(2.0, caps.zoom.max) }] });
-  }
-  }
-  } catch (e) {
-  // No loguear esto como error crítico, es normal en algunos Androids
-  console.log("Zoom no soportado/necesario", e);
-  }
-  }
+      // Intentar mejorar foco/zoom solo si está escaneando
+      try {
+        await sleep(1000);
+        if (html5QrCode.isScanning) {
+          const caps = html5QrCode.getRunningTrackCapabilities();
+          // Solo aplicar zoom si el dispositivo lo reporta
+          if (caps.zoom && caps.zoom.max > 1) {
+            await html5QrCode.applyVideoConstraints({ advanced: [{ zoom: Math.min(2.0, caps.zoom.max) }] });
+          }
+        }
+      } catch (e) {
+        // No loguear esto como error crítico, es normal en algunos Androids
+        console.log("Zoom no soportado/necesario", e);
+      }
+    }
 
-  // Iniciar
-  startScanner();
+    // Iniciar
+    startScanner();
   </script>
 
 
