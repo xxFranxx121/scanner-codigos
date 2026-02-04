@@ -310,7 +310,15 @@
         // Mostrar toast o alerta pequeña
         const resultDiv = document.getElementById("result");
         resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
-        setTimeout(() => { resultDiv.innerHTML = "Esperando escaneo..."; }, 2000);
+
+        // Reiniciar escáner automáticamente después de 1.5s
+        setTimeout(() => {
+          if (window.restartScanner) {
+            window.restartScanner();
+          } else {
+            resultDiv.innerHTML = "Esperando lectura...";
+          }
+        }, 1500);
 
       } catch (e) {
         console.error(e);
@@ -379,6 +387,13 @@
     window.restartScanner = function () {
       resultDiv.innerHTML = "Esperando lectura...";
       document.getElementById("debug-log").style.display = "none";
+
+      // Evitar error si ya está corriendo
+      if (html5QrCode.isScanning) {
+        console.log("Scanner ya activo");
+        return;
+      }
+
       startScanner();
     }
 
