@@ -1,37 +1,98 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <title>Lector Code 39</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Escáner de Facturación</title>
 
-  <link rel="stylesheet" href="styles.css" />
+  <!-- Librería -->
+  <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <!-- Librería QuaggaJS -->
-  <script src="https://unpkg.com/quagga@0.12.1/dist/quagga.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px auto;
+      border: 2px solid #00ff99;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      background: #222;
+      padding: 15px;
+      border-radius: 8px;
+      word-break: break-all;
+    }
+
+    .hint {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-top: 10px;
+    }
+  </style>
 </head>
-
 <body>
 
-  <h2>📷 Escanear Código (Code 39)</h2>
+  <h1>📦 Lector Code 39</h1>
+  <p>Apuntá la cámara al código de barras</p>
 
-  <div id="scanner-container"></div>
+  <div id="reader"></div>
 
-  <div class="info">
-    <p>Total escaneados: <strong id="contador">0</strong></p>
-    <p>Último: <span id="ultimo-escaneado">---</span></p>
-  </div>
+  <div id="result">Esperando lectura...</div>
 
-  <div class="actions">
-    <button id="btn-foto">📁 Subir foto (como Aspose)</button>
-    <input type="file" id="file-input" accept="image/*" style="display: none;">
-    <button id="limpiar" class="btn-danger">🗑 Limpiar todo</button>
-  </div>
+  <p class="hint">
+    ✔ Solo códigos <b>CODE 39</b><br>
+    ✔ Usá buena luz y mantené el código horizontal
+  </p>
 
-  <ul id="lista"></ul>
+<script>
+  const resultDiv = document.getElementById("result");
 
-  <script src="app.js"></script>
+  function onScanSuccess(decodedText, decodedResult) {
+    resultDiv.innerHTML = "✅ Código leído:<br><b>" + decodedText + "</b>";
+
+    // Si querés detener el escaneo después de leer uno:
+    // html5QrCode.stop();
+  }
+
+  function onScanFailure(error) {
+    // Silencioso para no saturar la consola
+  }
+
+  const html5QrCode = new Html5Qrcode("reader");
+
+  html5QrCode.start(
+    { facingMode: "environment" }, // cámara trasera
+    {
+      fps: 10,
+      qrbox: { width: 300, height: 150 },
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.CODE_39
+      ]
+    },
+    onScanSuccess,
+    onScanFailure
+  ).catch(err => {
+    resultDiv.innerText = "❌ Error al iniciar la cámara";
+    console.error(err);
+  });
+</script>
+
 </body>
-
 </html>
