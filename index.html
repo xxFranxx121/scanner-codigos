@@ -68,13 +68,12 @@
 
 
 
-  <script type="module">
-    // Importar Firebase (versión modular)
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from
-      "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- CONFIGURACIÓN DE FIREBASE ---
+  <!-- 1. SCRIPT DE BASE DE DATOS (FIREBASE) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyDjdlGGTm_bmTO9ETXIHe4VidA1k9my_nY",
       authDomain: "code39-optimi.firebaseapp.com",
@@ -84,22 +83,26 @@
       appId: "1:58310943950:web:0226916396780699365c9f"
     };
 
-    // Inicializar Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const CODES_COLLECTION = "codigos_barras"; // Nombre de la colección en la base de datos
+    let db;
+    let CODES_COLLECTION = "codigos_barras";
 
-    const resultDiv = document.getElementById("result");
-    const readerId = "reader";
-
-    const html5QrCode = new Html5Qrcode(readerId);
-
-    function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      console.log("✅ Firebase inicializado correctamente");
+    } catch (e) {
+      console.error("❌ Error inicializando Firebase:", e);
     }
 
-    // Función para guardar en la base de datos
-    async function checkAndSaveCode(code) {
+    // Exponer función global para que la use el scanner
+    window.checkAndSaveCode = async function (code) {
+      const resultDiv = document.getElementById("result");
+
+      if (!db) {
+        resultDiv.innerHTML = "⚠️ Error: No hay conexión con la base de datos.";
+        return;
+      }
+
       resultDiv.innerHTML = `⏳ Verificando código <b>${code}</b>...`;
 
       try {
@@ -110,98 +113,90 @@
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-          // Ya existe
           resultDiv.innerHTML = `
-  <div style="color: #ff4444; font-weight: bold;">
-    ⛔ ERROR: DUPLICADO
-  </div>
-  <div style="font-size: 0.8em; margin-top: 5px;">
-    El código <b>${code}</b> ya existe en la base de datos.
-  </div>
-  <button onclick="restartScanner()"
-    style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#444; color:white; cursor:pointer;">Escanear
-    otro</button>
-  `;
+                <div style="color: #ff4444; font-weight: bold;">⛔ ERROR: DUPLICADO</div>
+                <div style="font-size: 0.8em; margin-top: 5px;">El código <b>${code}</b> ya existe.</div>
+                <button onclick="restartScanner()" style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#444; color:white; cursor:pointer;">Escanear otro</button>
+            `;
           return;
         }
 
-        // 2. Si no existe, guardar
+        // 2. Guardar
         await addDoc(codesRef, {
           code: code,
           timestamp: serverTimestamp(),
-          device: navigator.userAgent // Opcional: saber desde qué disp. se escaneó
+          device: navigator.userAgent
         });
 
         resultDiv.innerHTML = `
-  <div style="color: #00ff99; font-weight: bold;">
-    ✅ GUARDADO EXITOSAMENTE
-  </div>
-  <div style="font-size: 0.8em; margin-top: 5px;">
-    Código: <b>${code}</b>
-  </div>
-  <button onclick="restartScanner()"
-    style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#00ff99; color:black; font-weight:bold; cursor:pointer;">Siguiente
-    ▶</button>
-  `;
+            <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO EXITOSAMENTE</div>
+            <div style="font-size: 0.8em; margin-top: 5px;">Código: <b>${code}</b></div>
+            <button onclick="restartScanner()" style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#00ff99; color:black; font-weight:bold; cursor:pointer;">Siguiente ▶</button>
+        `;
 
       } catch (error) {
         console.error("Error Firebase:", error);
-        resultDiv.innerHTML = `❌ Error de conexión: ${error.message}`;
-        // Si falla la config, mostrar aviso
-        if (error.message.includes("api-key")) {
-          resultDiv.innerHTML += "<br><small>⚠️ Falta configurar las claves de Firebase en el código.</small>";
-        }
+        resultDiv.innerHTML = `❌ Error guardando: ${error.message}`;
       }
-    }
+    };
+  </script>
 
-    // Función expuesta al window para el botón de html
+  <!-- 2. SCRIPT DEL SCANNER (LÓGICA ORIGINAL) -->
+  <script>
+    const resultDiv = document.getElementById("result");
+    const readerId = "reader";
+    const html5QrCode = new Html5Qrcode(readerId);
+
+    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
     window.restartScanner = function () {
       resultDiv.innerHTML = "Esperando lectura...";
       startScanner();
     }
 
     async function startScanner() {
-      // Pequeña pausa para asegurar que el DOM esté listo si se llama rápido
-      await sleep(500);
-
-      html5QrCode.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 320, height: 160 },
-          formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39]
-        },
-        (decodedText) => {
-          // Pausar escaneo al detectar uno
-          html5QrCode.stop().then(() => {
-            checkAndSaveCode(decodedText);
-          }).catch(err => console.error("Error al detener", err));
-        }
-      ).catch(err => {
-        // Manejo de error de inicio de cámara
+      // Intentar iniciar cámara
+      try {
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 320, height: 160 },
+            formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39]
+          },
+          (decodedText) => {
+            html5QrCode.stop().then(() => {
+              // Llamar a la función de Firebase (si existe) o mostrar alerta
+              if (window.checkAndSaveCode) {
+                window.checkAndSaveCode(decodedText);
+              } else {
+                alert("Base de datos no cargada aún. Código: " + decodedText);
+              }
+            });
+          }
+        );
+      } catch (err) {
         console.warn("Error iniciando cámara", err);
-      });
+        resultDiv.innerHTML = "❌ No se pudo acceder a la cámara. Asegurate de dar permisos.";
+      }
 
-      // Hotfix para iOS zoom/focus
+      // iOS Fix
       await sleep(2000);
       try {
-        // Intento de aplicar capacidades avanzadas si está corriendo
         if (html5QrCode.isScanning) {
           const caps = html5QrCode.getRunningTrackCapabilities();
-          const constraints = { advanced: [{ zoom: 2.0 }] }; // Simplificado
-          await html5QrCode.applyVideoConstraints(constraints);
+          await html5QrCode.applyVideoConstraints({ advanced: [{ zoom: 2.0 }] });
         }
-      } catch (e) {
-        console.log("No se pudo aplicar zoom automatico", e);
-      }
+      } catch (e) { console.log("Zoom no soportado", e); }
     }
 
-    // Iniciar al cargar
+    // Iniciar
     startScanner();
+  </script>
 
 
 
 
-</body >
+</body>
 
-</html >
+</html>
