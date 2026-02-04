@@ -119,115 +119,116 @@
 
 
   <!-- 1. SCRIPT DE BASE DE DATOS (FIREBASE) -->
+  <script>
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, onSnapshot, orderBy, doc, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, onSnapshot, orderBy, doc, deleteDoc
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyDjdlGGTm_bmTO9ETXIHe4VidA1k9my_nY",
+      authDomain: "code39-optimi.firebaseapp.com",
+      projectId: "code39-optimi",
+      storageBucket: "code39-optimi.firebasestorage.app",
+      messagingSenderId: "58310943950",
+      appId: "1:58310943950:web:0226916396780699365c9f"
+    };
 
-  const firebaseConfig = {
-  apiKey: "AIzaSyDjdlGGTm_bmTO9ETXIHe4VidA1k9my_nY",
-  authDomain: "code39-optimi.firebaseapp.com",
-  projectId: "code39-optimi",
-  storageBucket: "code39-optimi.firebasestorage.app",
-  messagingSenderId: "58310943950",
-  appId: "1:58310943950:web:0226916396780699365c9f"
-  };
+    let db;
+    let CODES_COLLECTION = "codigos_barras";
 
-  let db;
-  let CODES_COLLECTION = "codigos_barras";
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      console.log("✅ Firebase inicializado correctamente");
 
-  try {
-  const app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  console.log("✅ Firebase inicializado correctamente");
+      // Iniciar escucha del historial
+      startHistoryListener();
 
-  // Iniciar escucha del historial
-  startHistoryListener();
+    } catch (e) {
+      console.error("❌ Error inicializando Firebase:", e);
+    }
 
-  } catch (e) {
-  console.error("❌ Error inicializando Firebase:", e);
-  }
+    // --- LÓGICA DE HISTORIAL ---
+    function startHistoryListener() {
+      const historyList = document.getElementById("history-list");
+      if (!historyList) return;
 
-  // --- LÓGICA DE HISTORIAL ---
-  function startHistoryListener() {
-  const historyList = document.getElementById("history-list");
-  if(!historyList) return;
+      const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"));
 
-  const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"));
+      onSnapshot(q, (snapshot) => {
+        historyList.innerHTML = ""; // Limpiar lista
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString() : "Reciente";
 
-  onSnapshot(q, (snapshot) => {
-  historyList.innerHTML = ""; // Limpiar lista
-  snapshot.forEach((docSnap) => {
-  const data = docSnap.data();
-  const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString() : "Reciente";
-
-  const item = document.createElement("li");
-  item.className = "history-item";
-  item.innerHTML = `
+          const item = document.createElement("li");
+          item.className = "history-item";
+          item.innerHTML = `
   <div class="info">
     <strong>${data.code}</strong>
     <span class="time">${date}</span>
   </div>
   <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
   `;
-  historyList.appendChild(item);
-  });
-  });
-  }
+          historyList.appendChild(item);
+        });
+      });
+    }
 
-  // Función global para eliminar
-  window.deleteCode = async function(docId) {
-  const password = prompt("🔐 Ingrese contraseña de administrador para eliminar:");
-  if (password !== "1234") { // Contraseña simple por defecto
-  alert("⛔ Contraseña incorrecta");
-  return;
-  }
+    // Función global para eliminar
+    window.deleteCode = async function (docId) {
+      const password = prompt("🔐 Ingrese contraseña de administrador para eliminar:");
+      if (password !== "1234") { // Contraseña simple por defecto
+        alert("⛔ Contraseña incorrecta");
+        return;
+      }
 
-  try {
-  await deleteDoc(doc(db, CODES_COLLECTION, docId));
-  alert("✅ Eliminado correctamente");
-  } catch (e) {
-  console.error(e);
-  alert("Error al eliminar: " + e.message);
-  }
-  }
+      try {
+        await deleteDoc(doc(db, CODES_COLLECTION, docId));
+        alert("✅ Eliminado correctamente");
+      } catch (e) {
+        console.error(e);
+        alert("Error al eliminar: " + e.message);
+      }
+    }
 
-  // Exponer función global para que la use el scanner
-  window.checkAndSaveCode = async function (code) {
-  const resultDiv = document.getElementById("result");
+    // Exponer función global para que la use el scanner
+    window.checkAndSaveCode = async function (code) {
+      const resultDiv = document.getElementById("result");
 
-  if (!db) {
-  resultDiv.innerHTML = "⚠️ Error: No hay conexión con la base de datos.";
-  return;
-  }
+      if (!db) {
+        resultDiv.innerHTML = "⚠️ Error: No hay conexión con la base de datos.";
+        return;
+      }
 
-  resultDiv.innerHTML = `⏳ Verificando código <b>${code}</b>...`;
+      resultDiv.innerHTML = `⏳ Verificando código <b>${code}</b>...`;
 
-  try {
-  const codesRef = collection(db, CODES_COLLECTION);
-  // 1. Buscar duplicados
-  const q = query(codesRef, where("code", "==", code));
-  const querySnapshot = await getDocs(q);
+      try {
+        const codesRef = collection(db, CODES_COLLECTION);
+        // 1. Buscar duplicados
+        const q = query(codesRef, where("code", "==", code));
+        const querySnapshot = await getDocs(q);
 
-  if (!querySnapshot.empty) {
-  resultDiv.innerHTML = `
+        if (!querySnapshot.empty) {
+          resultDiv.innerHTML = `
   <div style="color: #ff4444; font-weight: bold;">⛔ ERROR: DUPLICADO</div>
   <div style="font-size: 0.8em; margin-top: 5px;">El código <b>${code}</b> ya existe.</div>
   <button onclick="restartScanner()"
     style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#444; color:white; cursor:pointer;">Escanear
     otro</button>
   `;
-  return;
-  }
+          return;
+        }
 
-  // 2. Guardar
-  await addDoc(codesRef, {
-  code: code,
-  timestamp: serverTimestamp(),
-  device: navigator.userAgent
-  });
+        // 2. Guardar
+        await addDoc(codesRef, {
+          code: code,
+          timestamp: serverTimestamp(),
+          device: navigator.userAgent
+        });
 
-  resultDiv.innerHTML = `
+        resultDiv.innerHTML = `
   <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO EXITOSAMENTE</div>
   <div style="font-size: 0.8em; margin-top: 5px;">Código: <b>${code}</b></div>
   <button onclick="restartScanner()"
@@ -235,11 +236,11 @@
     ▶</button>
   `;
 
-  } catch (error) {
-  console.error("Error Firebase:", error);
-  resultDiv.innerHTML = `❌ Error guardando: ${error.message}`;
-  }
-  };
+      } catch (error) {
+        console.error("Error Firebase:", error);
+        resultDiv.innerHTML = `❌ Error guardando: ${error.message}`;
+      }
+    };
   </script>
 
   <!-- 2. SCRIPT DEL SCANNER (LÓGICA ORIGINAL) -->
