@@ -233,18 +233,28 @@
 
     // Función global para eliminar
     window.deleteCode = async function (docId) {
-      const password = prompt("🔐 Ingrese contraseña de administrador para eliminar:");
-      if (password !== "1234") { // Contraseña simple por defecto
-        alert("⛔ Contraseña incorrecta");
-        return;
-      }
+      console.log("Intentando eliminar:", docId);
 
       try {
+        const password = prompt("🔐 Ingrese contraseña de administrador para eliminar:");
+        if (password === null) return; // Cancelado por usuario
+
+        if (password !== "1234") {
+          alert("⛔ Contraseña incorrecta");
+          return;
+        }
+
         await deleteDoc(doc(db, CODES_COLLECTION, docId));
         alert("✅ Eliminado correctamente");
       } catch (e) {
         console.error(e);
         alert("Error al eliminar: " + e.message);
+        // Mostrar en log visual también
+        const log = document.getElementById("debug-log");
+        if (log) {
+          log.style.display = "block";
+          log.innerHTML += `<br>Error Delete: ${e.message}`;
+        }
       }
     }
 
