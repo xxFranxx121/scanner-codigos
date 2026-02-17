@@ -428,6 +428,23 @@
         resultDiv.innerHTML = `❌ Error guardando: ${error.message}`;
       }
     };
+
+    // Exponer función para obtener todos los códigos guardados
+    window.getAllCodes = async function () {
+      if (!db) return [];
+      try {
+        const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"));
+        const snapshot = await getDocs(q);
+        const codes = [];
+        snapshot.forEach((docSnap) => {
+          codes.push(docSnap.data().code);
+        });
+        return codes;
+      } catch (e) {
+        console.error("Error obteniendo códigos:", e);
+        return [];
+      }
+    };
   </script>
 
   <!-- 1.5 SCRIPT API UBS INTEGRATION -->
@@ -530,12 +547,75 @@
           console.log("API Login:", data);
           updateApiUI("connected");
 
+          // Procesar todos los códigos existentes en Firebase
+          await processExistingCodes();
+
         } catch (e) {
           console.error(e);
           alert("Error conectando a la API: " + e.message);
           updateApiUI("disconnected");
         }
       }
+    }
+
+    // --- Procesar códigos existentes al conectar ---
+    async function processExistingCodes() {
+      if (!window.getAllCodes) {
+        console.warn("getAllCodes no disponible aún");
+        return;
+      }
+
+      ubDetail.style.display = "block";
+      ubDetail.innerText = "⏳ Cargando códigos existentes...";
+
+      const codes = await window.getAllCodes();
+      if (codes.length === 0) {
+        ubDetail.innerText = "ℹ️ No hay códigos previos";
+        return;
+      }
+
+      ubDetail.innerText = `⏳ Procesando 0/${codes.length} códigos...`;
+
+      let processed = 0;
+      let errors = 0;
+
+      for (const code of codes) {
+        try {
+          const targetUrl = `${TARGET_API}/process-nai`;
+          const finalUrl = PROXY + encodeURIComponent(targetUrl);
+
+          const res = await fetch(finalUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nai: code })
+          });
+
+          const data = await res.json();
+
+          if (data.status === "Encontrado" && data.recetas && data.recetas.length > 0) {
+            let naiTotal = 0;
+            data.recetas.forEach(r => {
+              naiTotal += parseFloat(r.total_ub || 0);
+            });
+            totalUB += naiTotal;
+            ubValue.innerText = totalUB.toFixed(2);
+          }
+        } catch (e) {
+          console.error(`Error procesando código ${code}:`, e);
+          errors++;
+        }
+
+        processed++;
+        ubDetail.innerText = `⏳ Procesando ${processed}/${codes.length} códigos...`;
+      }
+
+      // Resumen final
+      if (errors > 0) {
+        ubDetail.innerText = `✔ ${processed - errors}/${codes.length} procesados (${errors} errores)`;
+      } else {
+        ubDetail.innerText = `✔ ${codes.length} códigos procesados`;
+      }
+      ubDetail.style.background = "rgba(255,255,255,0.3)";
     }
 
     async function processUbApi(nai) {
