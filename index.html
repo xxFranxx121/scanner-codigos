@@ -11,7 +11,6 @@
   <!-- Librería -->
   <script src="https://unpkg.com/html5-qrcode"></script>
 
-
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -25,7 +24,6 @@
     h1 {
       margin-bottom: 5px;
       color: #9e2a2b;
-      /* Bordó Institucional */
       font-size: 28px;
       font-weight: 700;
     }
@@ -57,7 +55,6 @@
       border-left: 5px solid #9e2a2b;
     }
 
-    /* Historial */
     #history-container {
       max-width: 400px;
       margin: 30px auto;
@@ -133,6 +130,156 @@
       font-size: 11px;
       color: #aaa;
     }
+
+    /* --- PROGRESS BAR --- */
+    .progress-container {
+      max-width: 400px;
+      margin: 8px auto;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      height: 12px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #9e2a2b, #d9534f, #f0ad4e);
+      background-size: 200% 100%;
+      border-radius: 10px;
+      transition: width 0.4s ease;
+      animation: shimmer 1.5s infinite linear;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    /* --- ERROR LIST --- */
+    .error-list-container {
+      max-width: 400px;
+      margin: 10px auto;
+      text-align: left;
+      display: none;
+    }
+
+    .error-list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      background: #fff3f3;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border-left: 4px solid #cc0000;
+    }
+
+    .error-list-header:hover {
+      background: #ffe5e5;
+    }
+
+    .error-item {
+      background: #fff;
+      margin: 4px 0;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      border-left: 3px solid #ff6b6b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .error-item .error-code {
+      font-weight: bold;
+      color: #cc0000;
+    }
+
+    .error-item .error-msg {
+      font-size: 11px;
+      color: #888;
+    }
+
+    /* --- BREAKDOWN --- */
+    .breakdown-container {
+      max-width: 400px;
+      margin: 10px auto;
+      text-align: left;
+      display: none;
+    }
+
+    .breakdown-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      background: #f0f7ff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border-left: 4px solid #007bff;
+    }
+
+    .breakdown-header:hover {
+      background: #e0efff;
+    }
+
+    .breakdown-item {
+      background: #fff;
+      margin: 4px 0;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      border-left: 3px solid #28a745;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .breakdown-item .ub-val {
+      font-weight: bold;
+      color: #28a745;
+    }
+
+    /* --- TOOLBAR --- */
+    .toolbar {
+      max-width: 400px;
+      margin: 10px auto;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .toolbar button {
+      padding: 8px 14px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      background: white;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .toolbar button:hover {
+      background: #f5f5f5;
+      border-color: #9e2a2b;
+      color: #9e2a2b;
+    }
+
+    .toolbar button.active {
+      background: #9e2a2b;
+      color: white;
+      border-color: #9e2a2b;
+    }
   </style>
 </head>
 
@@ -159,7 +306,7 @@
   </div>
 
   <!-- TOTAL UB DISPLAY -->
-  <div id="ub-display" style="display: none; max-width: 400px; margin: 0 auto 15px auto;">
+  <div id="ub-display" style="display: none; max-width: 400px; margin: 0 auto 10px auto;">
     <div
       style="background: linear-gradient(135deg, #9e2a2b 0%, #d9534f 100%); color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(158, 42, 43, 0.3);">
       <div style="font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;">Total Unidades
@@ -169,8 +316,40 @@
       </div>
       <div id="last-ub-detail"
         style="font-size: 11px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; display:none;">
-        <!-- Detalle dinámico -->
       </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS BAR -->
+  <div id="progress-container" class="progress-container">
+    <div id="progress-bar" class="progress-bar"></div>
+  </div>
+
+  <!-- TOOLBAR (Sound, Export) -->
+  <div class="toolbar" id="toolbar" style="display:none;">
+    <button id="btn-sound" onclick="toggleSound()">🔊 Sonido</button>
+    <button id="btn-export" onclick="exportCSV()">📤 Exportar CSV</button>
+  </div>
+
+  <!-- ERROR LIST (Live) -->
+  <div id="error-list-container" class="error-list-container">
+    <div class="error-list-header" onclick="toggleErrorList()">
+      <span>❌ <strong>NAIs con Error</strong> (<span id="error-count">0</span>)</span>
+      <span id="error-toggle-icon">▼</span>
+    </div>
+    <div id="error-list-body" style="display:none; margin-top: 4px;">
+      <!-- Error items appended here -->
+    </div>
+  </div>
+
+  <!-- BREAKDOWN LIST -->
+  <div id="breakdown-container" class="breakdown-container">
+    <div class="breakdown-header" onclick="toggleBreakdown()">
+      <span>📊 <strong>Desglose por NAI</strong> (<span id="breakdown-count">0</span>)</span>
+      <span id="breakdown-toggle-icon">▼</span>
+    </div>
+    <div id="breakdown-body" style="display:none; margin-top: 4px;">
+      <!-- Breakdown items appended here -->
     </div>
   </div>
 
@@ -181,7 +360,7 @@
   </div>
 
   <div id="debug-log"
-    style="display:none; color:red; font-size:12px; margin-top:20px; text-align:left; background:#xffeded; padding:10px; border:1px solid red;">
+    style="display:none; color:red; font-size:12px; margin-top:20px; text-align:left; background:#ffeded; padding:10px; border:1px solid red;">
   </div>
 
   <div id="history-container">
@@ -224,17 +403,16 @@
     &copy; 2026 Laboratorio Banda
   </footer>
 
+  <!-- 0. MODAL SCRIPT -->
   <script>
-    // Variables globales para el modal
     window.pendingDocId = null;
 
     window.openDeleteModal = function (docId) {
       window.pendingDocId = docId;
       const modal = document.getElementById("auth-modal");
       const input = document.getElementById("admin-pass");
-
       modal.style.display = "flex";
-      input.value = ""; // Limpiar
+      input.value = "";
       input.focus();
     }
 
@@ -242,18 +420,100 @@
       document.getElementById("auth-modal").style.display = "none";
       window.pendingDocId = null;
     }
+
+    // --- SOUND SYSTEM ---
+    let soundEnabled = true;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById("btn-sound");
+      btn.innerText = soundEnabled ? "🔊 Sonido" : "🔇 Mudo";
+      btn.classList.toggle("active", soundEnabled);
+    }
+
+    function playBeep(freq, duration, type) {
+      if (!soundEnabled) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = freq;
+        osc.type = type || "sine";
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) { console.log("Audio error", e); }
+    }
+
+    function playSuccess() {
+      playBeep(880, 0.15, "sine");
+      setTimeout(() => playBeep(1320, 0.2, "sine"), 150);
+      if (navigator.vibrate) navigator.vibrate(100);
+    }
+
+    function playError() {
+      playBeep(200, 0.3, "square");
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    }
+
+    function playScan() {
+      playBeep(660, 0.1, "sine");
+      if (navigator.vibrate) navigator.vibrate(50);
+    }
+
+    // --- TOGGLE SECTIONS ---
+    function toggleErrorList() {
+      const body = document.getElementById("error-list-body");
+      const icon = document.getElementById("error-toggle-icon");
+      const visible = body.style.display !== "none";
+      body.style.display = visible ? "none" : "block";
+      icon.innerText = visible ? "▼" : "▲";
+    }
+
+    function toggleBreakdown() {
+      const body = document.getElementById("breakdown-body");
+      const icon = document.getElementById("breakdown-toggle-icon");
+      const visible = body.style.display !== "none";
+      body.style.display = visible ? "none" : "block";
+      icon.innerText = visible ? "▼" : "▲";
+    }
+
+    // --- EXPORT CSV ---
+    function exportCSV() {
+      const breakdownBody = document.getElementById("breakdown-body");
+      const items = breakdownBody.querySelectorAll(".breakdown-item");
+
+      if (items.length === 0) {
+        alert("No hay datos para exportar.");
+        return;
+      }
+
+      let csv = "NAI,UB,Paciente\n";
+      items.forEach(item => {
+        const code = item.dataset.code || "";
+        const ub = item.dataset.ub || "0";
+        const paciente = item.dataset.paciente || "";
+        csv += `"${code}","${ub}","${paciente}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ub_desglose_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   </script>
-
-
-
-
-
 
   <!-- 1. SCRIPT DE BASE DE DATOS (FIREBASE) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, onSnapshot, orderBy, doc, deleteDoc
+      getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDoc, setDoc
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -273,14 +533,51 @@
       db = getFirestore(app);
       console.log("✅ Firebase inicializado correctamente");
 
-      // Iniciar escucha del historial
       startHistoryListener();
+      loadPersistedUB();
 
     } catch (e) {
       console.error("❌ Error inicializando Firebase:", e);
     }
 
-    // --- LÓGICA DE HISTORIAL ---
+    // --- LOAD PERSISTED UB ON PAGE LOAD ---
+    async function loadPersistedUB() {
+      try {
+        const q = query(collection(db, CODES_COLLECTION));
+        const snapshot = await getDocs(q);
+        let total = 0;
+        let count = 0;
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.ub_processed && data.ub_value) {
+            total += parseFloat(data.ub_value);
+            count++;
+          }
+        });
+
+        if (total > 0) {
+          // Show persisted UB even when disconnected
+          const ubDisplay = document.getElementById("ub-display");
+          const ubValue = document.getElementById("total-ub-value");
+          const ubDetail = document.getElementById("last-ub-detail");
+
+          ubDisplay.style.display = "block";
+          ubValue.innerText = total.toFixed(2);
+          ubDetail.style.display = "block";
+          ubDetail.innerText = `📦 ${count} códigos con UB guardadas`;
+          ubDetail.style.background = "rgba(255,255,255,0.2)";
+
+          // Set global totalUB so the API script picks up from here
+          window._persistedTotalUB = total;
+          window._persistedCount = count;
+        }
+      } catch (e) {
+        console.error("Error cargando UB persistidas:", e);
+      }
+    }
+
+    // --- HISTORY LISTENER ---
     function startHistoryListener() {
       const historyList = document.getElementById("history-list");
       if (!historyList) return;
@@ -288,28 +585,27 @@
       const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"));
 
       onSnapshot(q, (snapshot) => {
-        historyList.innerHTML = ""; // Limpiar lista
+        historyList.innerHTML = "";
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();
           const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString() : "Reciente";
+          const ubBadge = data.ub_processed ? `<span style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>` : "";
 
           const item = document.createElement("li");
           item.className = "history-item";
           item.innerHTML = `
-  <div class="info">
-    <strong>${data.code}</strong>
-    <span class="time">${date}</span>
-  </div>
-  <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
-  `;
+            <div class="info">
+              <strong>${data.code}${ubBadge}</strong>
+              <span class="time">${date}</span>
+            </div>
+            <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
+          `;
           historyList.appendChild(item);
         });
       });
     }
 
-    // Función llamada desde el botón de la lista
     window.deleteCode = function (docId) {
-      // Abrir el modal visual (definido abajo)
       if (window.openDeleteModal) {
         window.openDeleteModal(docId);
       } else {
@@ -317,12 +613,10 @@
       }
     }
 
-    // Función llamada desde el botón "Confirmar" del modal
     window.confirmDelete = async function () {
       const input = document.getElementById("admin-pass");
       const password = input.value;
 
-      // Verificar clave
       if (password !== "1234") {
         alert("⛔ CLAVE INCORRECTA");
         input.value = "";
@@ -330,21 +624,16 @@
         return;
       }
 
-      // Obtener ID guardado en global
       const docId = window.pendingDocId;
       if (!docId) return;
 
       try {
         await deleteDoc(doc(db, CODES_COLLECTION, docId));
-
-        // Cerrar modal y notificar
         if (window.closeModal) window.closeModal();
 
-        // Mostrar toast o alerta pequeña
         const resultDiv = document.getElementById("result");
         resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
 
-        // Reiniciar escáner automáticamente después de 1.5s
         setTimeout(() => {
           if (window.restartScanner) {
             window.restartScanner();
@@ -372,56 +661,55 @@
 
       try {
         const codesRef = collection(db, CODES_COLLECTION);
-        // 1. Buscar duplicados
         const q = query(codesRef, where("code", "==", code));
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
+          playError();
           resultDiv.innerHTML = `
-  <div style="color: #ff4444; font-weight: bold;">⛔ ERROR: DUPLICADO</div>
-  <div style="font-size: 0.8em; margin-top: 5px;">El código <b>${code}</b> ya existe.</div>
-  <button onclick="restartScanner()"
-    style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#444; color:white; cursor:pointer;">Escanear
-    otro</button>
-  `;
+            <div style="color: #ff4444; font-weight: bold;">⛔ ERROR: DUPLICADO</div>
+            <div style="font-size: 0.8em; margin-top: 5px;">El código <b>${code}</b> ya existe.</div>
+            <button onclick="restartScanner()"
+              style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#444; color:white; cursor:pointer;">Escanear otro</button>
+          `;
           return;
         }
 
-        // 2. Guardar
+        // Guardar
         await addDoc(codesRef, {
           code: code,
           timestamp: serverTimestamp(),
-          device: navigator.userAgent
+          device: navigator.userAgent,
+          ub_processed: false,
+          ub_value: 0
         });
 
-        resultDiv.innerHTML = `
-  <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO EXITOSAMENTE</div>
-  <div style="font-size: 0.8em; margin-top: 5px;">Código: <b>${code}</b></div>
-  <button onclick="restartScanner()"
-    style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#00ff99; color:black; font-weight:bold; cursor:pointer;">Siguiente
-    ▶</button>
-  `;
+        playScan();
 
-        // --- API INTEGRATION CALL ---
+        resultDiv.innerHTML = `
+          <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO EXITOSAMENTE</div>
+          <div style="font-size: 0.8em; margin-top: 5px;">Código: <b>${code}</b></div>
+          <button onclick="restartScanner()"
+            style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#00ff99; color:black; font-weight:bold; cursor:pointer;">Siguiente ▶</button>
+        `;
+
+        // API INTEGRATION CALL
         if (window.processUbApi) {
-          // Non-blocking call to API
           window.processUbApi(code).then(apiResult => {
             if (apiResult && apiResult.found) {
-              // Optionally update the resultDiv with API info too?
-              // For now, the main UI has the big UB counter, so maybe just a small toast in the resultDiv?
+              playSuccess();
               const extraMsg = document.createElement("div");
-              extraMsg.style.marginTop = "10px";
-              extraMsg.style.fontSize = "12px";
-              extraMsg.style.color = "#fff";
-              extraMsg.style.background = "#9e2a2b";
-              extraMsg.style.padding = "5px";
-              extraMsg.style.borderRadius = "4px";
-              extraMsg.innerHTML = `💰 UB Agregadas: <b>${apiResult.total_ub}</b>`;
+              extraMsg.style.cssText = "margin-top:10px; font-size:12px; color:#fff; background:#9e2a2b; padding:5px; border-radius:4px;";
+              extraMsg.innerHTML = `💰 UB Agregadas: <b>${apiResult.total_ub.toFixed(2)}</b>`;
               resultDiv.appendChild(extraMsg);
+
+              // Persist UB in Firebase for this code
+              if (window.markCodeProcessed) {
+                window.markCodeProcessed(code, apiResult.total_ub, apiResult.paciente || "");
+              }
             }
           });
         }
-        // ----------------------------
 
       } catch (error) {
         console.error("Error Firebase:", error);
@@ -429,7 +717,7 @@
       }
     };
 
-    // Exponer función para obtener todos los códigos guardados
+    // Obtener todos los códigos
     window.getAllCodes = async function () {
       if (!db) return [];
       try {
@@ -437,7 +725,13 @@
         const snapshot = await getDocs(q);
         const codes = [];
         snapshot.forEach((docSnap) => {
-          codes.push(docSnap.data().code);
+          const data = docSnap.data();
+          codes.push({
+            id: docSnap.id,
+            code: data.code,
+            ub_processed: data.ub_processed || false,
+            ub_value: data.ub_value || 0
+          });
         });
         return codes;
       } catch (e) {
@@ -445,21 +739,35 @@
         return [];
       }
     };
+
+    // Marcar código como procesado con su valor UB
+    window.markCodeProcessed = async function (code, ubVal, paciente) {
+      if (!db) return;
+      try {
+        const q = query(collection(db, CODES_COLLECTION), where("code", "==", code));
+        const snapshot = await getDocs(q);
+        snapshot.forEach(async (docSnap) => {
+          await updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
+            ub_processed: true,
+            ub_value: ubVal,
+            ub_paciente: paciente || ""
+          });
+        });
+      } catch (e) {
+        console.error("Error marcando código procesado:", e);
+      }
+    };
   </script>
 
   <!-- 1.5 SCRIPT API UBS INTEGRATION -->
   <script>
-    // Usamos corsproxy.io para evitar bloqueo CORS al correr en local/file://
     const PROXY = "https://corsproxy.io/?";
     const TARGET_API = "https://api-ubs-production.up.railway.app";
-    const API_BASE = PROXY + encodeURIComponent(TARGET_API);
-
-    // NOTA: Si el proxy falla, instalar extensión "Allow CORS" en Chrome y quitar PROXY.
     const API_USER = "RRSSRL";
-    const API_PASS = "30717143503"; // Hardcoded credentials
+    const API_PASS = "30717143503";
 
     let apiSessionActive = false;
-    let totalUB = 0.0;
+    let totalUB = window._persistedTotalUB || 0.0;
 
     // UI Elements
     const btnConnect = document.getElementById("btn-connect");
@@ -468,6 +776,21 @@
     const ubDisplay = document.getElementById("ub-display");
     const ubValue = document.getElementById("total-ub-value");
     const ubDetail = document.getElementById("last-ub-detail");
+    const progressContainer = document.getElementById("progress-container");
+    const progressBar = document.getElementById("progress-bar");
+    const toolbar = document.getElementById("toolbar");
+    const errorListContainer = document.getElementById("error-list-container");
+    const errorListBody = document.getElementById("error-list-body");
+    const errorCount = document.getElementById("error-count");
+    const breakdownContainer = document.getElementById("breakdown-container");
+    const breakdownBody = document.getElementById("breakdown-body");
+    const breakdownCount = document.getElementById("breakdown-count");
+
+    // Initialize from persisted
+    if (window._persistedTotalUB) {
+      totalUB = window._persistedTotalUB;
+      ubValue.innerText = totalUB.toFixed(2);
+    }
 
     function updateApiUI(state) {
       if (state === "connecting") {
@@ -482,6 +805,7 @@
         statusInd.innerHTML = "🟢 Conectado";
         statusInd.style.color = "#28a745";
         ubDisplay.style.display = "block";
+        toolbar.style.display = "flex";
       } else if (state === "disconnected") {
         apiSessionActive = false;
         btnConnect.style.background = "#9e2a2b";
@@ -489,21 +813,52 @@
         btnConnect.disabled = false;
         statusInd.innerHTML = "🔴 Desconectado";
         statusInd.style.color = "#999";
-        ubDisplay.style.display = "none";
-        totalUB = 0.0;
-        ubValue.innerText = "0.00";
+        progressContainer.style.display = "none";
       }
+    }
+
+    function updateProgress(current, total) {
+      progressContainer.style.display = "block";
+      const pct = total > 0 ? (current / total * 100) : 0;
+      progressBar.style.width = pct + "%";
+    }
+
+    function addErrorToList(code, reason) {
+      errorListContainer.style.display = "block";
+      const item = document.createElement("div");
+      item.className = "error-item";
+      item.innerHTML = `
+        <span class="error-code">${code}</span>
+        <span class="error-msg">${reason}</span>
+      `;
+      errorListBody.appendChild(item);
+      const count = errorListBody.querySelectorAll(".error-item").length;
+      errorCount.innerText = count;
+    }
+
+    function addBreakdownItem(code, ub, paciente) {
+      breakdownContainer.style.display = "block";
+      const item = document.createElement("div");
+      item.className = "breakdown-item";
+      item.dataset.code = code;
+      item.dataset.ub = ub.toFixed(2);
+      item.dataset.paciente = paciente;
+      item.innerHTML = `
+        <div>
+          <div style="font-weight:bold; font-size:14px;">${code}</div>
+          <div style="font-size:11px; color:#888;">${paciente}</div>
+        </div>
+        <span class="ub-val">+${ub.toFixed(2)} UB</span>
+      `;
+      breakdownBody.appendChild(item);
+      const count = breakdownBody.querySelectorAll(".breakdown-item").length;
+      breakdownCount.innerText = count;
     }
 
 
     async function toggleApiSession() {
       if (apiSessionActive) {
-        // Stop Session
         try {
-          // Ideally call /stop-session but simply resetting local state is faster for UI responsiveness
-          // We can fire-and-forget the stop call if strict resource mgmt is needed, currently just resetting.
-          // await fetch(`${API_BASE}/stop-session`, { method: "POST" }); 
-          // The instructions say "Stop Session" endpoint exists, so let's try to be nice.
           const targetUrl = `${TARGET_API}/stop-session`;
           const finalUrl = PROXY + encodeURIComponent(targetUrl);
           fetch(finalUrl, { method: "POST" }).catch(e => console.warn("Error stopping session", e));
@@ -513,15 +868,10 @@
           updateApiUI("disconnected");
         }
       } else {
-        // Start Session
         updateApiUI("connecting");
         try {
           const today = new Date();
           const startYear = today.getFullYear();
-          // Hardcoding a wide range or current year as per requirement needed? 
-          // User prompts didn't specify dynamic dates, but example used 2026. 
-          // Let's use current year dynamically relative to the prompt context (2026).
-          // Time provided in metadata is 2026.
 
           const payload = {
             user: API_USER,
@@ -531,7 +881,6 @@
             headless: true
           };
 
-          // Construir URL completa y luego pasar por proxy
           const targetUrl = `${TARGET_API}/start-session`;
           const finalUrl = PROXY + encodeURIComponent(targetUrl);
 
@@ -547,7 +896,7 @@
           console.log("API Login:", data);
           updateApiUI("connected");
 
-          // Procesar todos los códigos existentes en Firebase
+          // Process unprocessed codes
           await processExistingCodes();
 
         } catch (e) {
@@ -558,7 +907,7 @@
       }
     }
 
-    // --- Procesar códigos existentes al conectar ---
+    // --- Process existing codes (only unprocessed ones) ---
     async function processExistingCodes() {
       if (!window.getAllCodes) {
         console.warn("getAllCodes no disponible aún");
@@ -566,20 +915,41 @@
       }
 
       ubDetail.style.display = "block";
-      ubDetail.innerText = "⏳ Cargando códigos existentes...";
+      ubDetail.innerText = "⏳ Cargando códigos...";
 
-      const codes = await window.getAllCodes();
-      if (codes.length === 0) {
-        ubDetail.innerText = "ℹ️ No hay códigos previos";
+      // Clear previous error/breakdown lists
+      errorListBody.innerHTML = "";
+      errorCount.innerText = "0";
+      errorListContainer.style.display = "none";
+      breakdownBody.innerHTML = "";
+      breakdownCount.innerText = "0";
+      breakdownContainer.style.display = "none";
+
+      const allCodes = await window.getAllCodes();
+
+      // Load already-processed codes into breakdown
+      const unprocessed = [];
+      allCodes.forEach(c => {
+        if (c.ub_processed && c.ub_value > 0) {
+          addBreakdownItem(c.code, c.ub_value, "");
+        } else if (!c.ub_processed) {
+          unprocessed.push(c);
+        }
+      });
+
+      if (unprocessed.length === 0) {
+        ubDetail.innerText = `✔ Todo procesado (${allCodes.length} códigos)`;
+        progressContainer.style.display = "none";
         return;
       }
 
-      ubDetail.innerText = `⏳ Procesando 0/${codes.length} códigos...`;
+      ubDetail.innerText = `⏳ Procesando 0/${unprocessed.length} pendientes...`;
 
       let processed = 0;
-      let errors = 0;
 
-      for (const code of codes) {
+      for (const codeObj of unprocessed) {
+        updateProgress(processed, unprocessed.length);
+
         try {
           const targetUrl = `${TARGET_API}/process-nai`;
           const finalUrl = PROXY + encodeURIComponent(targetUrl);
@@ -587,39 +957,55 @@
           const res = await fetch(finalUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nai: code })
+            body: JSON.stringify({ nai: codeObj.code })
           });
 
           const data = await res.json();
 
           if (data.status === "Encontrado" && data.recetas && data.recetas.length > 0) {
             let naiTotal = 0;
+            let paciente = data.recetas[0].paciente || "";
             data.recetas.forEach(r => {
               naiTotal += parseFloat(r.total_ub || 0);
             });
+
             totalUB += naiTotal;
             ubValue.innerText = totalUB.toFixed(2);
+
+            // Persist in Firebase
+            if (window.markCodeProcessed) {
+              window.markCodeProcessed(codeObj.code, naiTotal, paciente);
+            }
+
+            addBreakdownItem(codeObj.code, naiTotal, paciente);
+          } else {
+            addErrorToList(codeObj.code, "No encontrado");
           }
         } catch (e) {
-          console.error(`Error procesando código ${code}:`, e);
-          errors++;
+          console.error(`Error procesando ${codeObj.code}:`, e);
+          addErrorToList(codeObj.code, e.message || "Error de red");
         }
 
         processed++;
-        ubDetail.innerText = `⏳ Procesando ${processed}/${codes.length} códigos...`;
+        ubDetail.innerText = `⏳ Procesando ${processed}/${unprocessed.length} pendientes...`;
+        updateProgress(processed, unprocessed.length);
       }
 
-      // Resumen final
-      if (errors > 0) {
-        ubDetail.innerText = `✔ ${processed - errors}/${codes.length} procesados (${errors} errores)`;
+      // Done
+      const errCount = errorListBody.querySelectorAll(".error-item").length;
+      if (errCount > 0) {
+        ubDetail.innerText = `✔ ${processed - errCount} procesados, ${errCount} errores`;
+        playError();
       } else {
-        ubDetail.innerText = `✔ ${codes.length} códigos procesados`;
+        ubDetail.innerText = `✔ ${unprocessed.length} códigos procesados`;
+        playSuccess();
       }
       ubDetail.style.background = "rgba(255,255,255,0.3)";
+      progressContainer.style.display = "none";
     }
 
     async function processUbApi(nai) {
-      if (!apiSessionActive) return null; // Do nothing if not connected
+      if (!apiSessionActive) return null;
 
       try {
         ubDetail.style.display = "block";
@@ -638,8 +1024,8 @@
         console.log("API Process:", data);
 
         if (data.status === "Encontrado" && data.recetas && data.recetas.length > 0) {
-          // Sumar UBs
           let naiTotal = 0;
+          let paciente = data.recetas[0].paciente || "";
           data.recetas.forEach(r => {
             naiTotal += parseFloat(r.total_ub || 0);
           });
@@ -647,31 +1033,34 @@
           totalUB += naiTotal;
           ubValue.innerText = totalUB.toFixed(2);
 
-          // Show details of first found
-          const first = data.recetas[0];
-          ubDetail.innerText = `✔ ${first.paciente} (+${naiTotal.toFixed(2)})`;
+          ubDetail.innerText = `✔ ${paciente} (+${naiTotal.toFixed(2)})`;
           ubDetail.style.background = "rgba(255,255,255,0.3)";
+
+          addBreakdownItem(nai, naiTotal, paciente);
 
           return {
             found: true,
             total_ub: naiTotal,
+            paciente: paciente,
             details: data.recetas
           };
         } else {
           ubDetail.innerText = "❌ No encontrado en API";
           ubDetail.style.background = "rgba(0,0,0,0.1)";
+          addErrorToList(nai, "No encontrado");
           return { found: false };
         }
 
       } catch (e) {
         console.error("API Error processing NAI", e);
         ubDetail.innerText = "⚠️ Error API";
+        addErrorToList(nai, e.message || "Error");
         return { error: e };
       }
     }
   </script>
 
-  <!-- 2. SCRIPT DEL SCANNER (LÓGICA ORIGINAL) -->
+  <!-- 2. SCRIPT DEL SCANNER -->
   <script>
     const resultDiv = document.getElementById("result");
     const readerId = "reader";
@@ -683,7 +1072,6 @@
       resultDiv.innerHTML = "Esperando lectura...";
       document.getElementById("debug-log").style.display = "none";
 
-      // Evitar error si ya está corriendo
       if (html5QrCode.isScanning) {
         console.log("Scanner ya activo");
         return;
@@ -700,7 +1088,6 @@
     }
 
     async function startScanner() {
-      // Intentar iniciar cámara
       try {
         await html5QrCode.start(
           { facingMode: "environment" },
@@ -714,7 +1101,6 @@
           },
           (decodedText) => {
             html5QrCode.stop().then(() => {
-              // Llamar a la función de Firebase (si existe) o mostrar alerta
               if (window.checkAndSaveCode) {
                 window.checkAndSaveCode(decodedText);
               } else {
@@ -728,28 +1114,21 @@
         resultDiv.innerHTML = "❌ Error de cámara (ver abajo)";
       }
 
-      // Intentar mejorar foco/zoom solo si está escaneando
       try {
         await sleep(1000);
         if (html5QrCode.isScanning) {
           const caps = html5QrCode.getRunningTrackCapabilities();
-          // Solo aplicar zoom si el dispositivo lo reporta
           if (caps.zoom && caps.zoom.max > 1) {
             await html5QrCode.applyVideoConstraints({ advanced: [{ zoom: Math.min(2.0, caps.zoom.max) }] });
           }
         }
       } catch (e) {
-        // No loguear esto como error crítico, es normal en algunos Androids
         console.log("Zoom no soportado/necesario", e);
       }
     }
 
-    // Iniciar
     startScanner();
   </script>
-
-
-
 
 </body>
 
