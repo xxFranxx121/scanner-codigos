@@ -432,7 +432,12 @@
 
   <!-- 1.5 SCRIPT API UBS INTEGRATION -->
   <script>
-    const API_BASE = "https://api-ubs-production.up.railway.app";
+    // Usamos corsproxy.io para evitar bloqueo CORS al correr en local/file://
+    const PROXY = "https://corsproxy.io/?";
+    const TARGET_API = "https://api-ubs-production.up.railway.app";
+    const API_BASE = PROXY + encodeURIComponent(TARGET_API);
+
+    // NOTA: Si el proxy falla, instalar extensión "Allow CORS" en Chrome y quitar PROXY.
     const API_USER = "RRSSRL";
     const API_PASS = "30717143503"; // Hardcoded credentials
 
@@ -482,7 +487,9 @@
           // We can fire-and-forget the stop call if strict resource mgmt is needed, currently just resetting.
           // await fetch(`${API_BASE}/stop-session`, { method: "POST" }); 
           // The instructions say "Stop Session" endpoint exists, so let's try to be nice.
-          fetch(`${API_BASE}/stop-session`, { method: "POST" }).catch(e => console.warn("Error stopping session", e));
+          const targetUrl = `${TARGET_API}/stop-session`;
+          const finalUrl = PROXY + encodeURIComponent(targetUrl);
+          fetch(finalUrl, { method: "POST" }).catch(e => console.warn("Error stopping session", e));
         } catch (e) {
           console.error(e);
         } finally {
@@ -507,13 +514,17 @@
             headless: true
           };
 
-          const res = await fetch(`${API_BASE}/start-session`, {
+          // Construir URL completa y luego pasar por proxy
+          const targetUrl = `${TARGET_API}/start-session`;
+          const finalUrl = PROXY + encodeURIComponent(targetUrl);
+
+          const res = await fetch(finalUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
 
-          if (!res.ok) throw new Error("Error en login API");
+          if (!res.ok) throw new Error("Error en login API (" + res.status + ")");
 
           const data = await res.json();
           console.log("API Login:", data);
@@ -534,7 +545,10 @@
         ubDetail.style.display = "block";
         ubDetail.innerText = "⏳ Buscando en API...";
 
-        const res = await fetch(`${API_BASE}/process-nai`, {
+        const targetUrl = `${TARGET_API}/process-nai`;
+        const finalUrl = PROXY + encodeURIComponent(targetUrl);
+
+        const res = await fetch(finalUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ nai: nai })
