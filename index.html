@@ -333,9 +333,14 @@
 
   <!-- ERROR LIST (Live) -->
   <div id="error-list-container" class="error-list-container">
-    <div class="error-list-header" onclick="toggleErrorList()">
-      <span>❌ <strong>NAIs con Error</strong> (<span id="error-count">0</span>)</span>
-      <span id="error-toggle-icon">▼</span>
+    <div class="error-list-header">
+      <span onclick="toggleErrorList()" style="flex:1; cursor:pointer;">❌ <strong>NAIs con Error</strong> (<span
+          id="error-count">0</span>)</span>
+      <span id="error-toggle-icon" onclick="toggleErrorList()" style="cursor:pointer;">▼</span>
+      <button id="btn-retry" onclick="retryFailedNAIs()"
+        style="margin-left:8px; background:#cc0000; color:white; border:none; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:3px;">
+        🔄 Reintentar
+      </button>
     </div>
     <div id="error-list-body" style="display:none; margin-top: 4px;">
       <!-- Error items appended here -->
@@ -823,10 +828,18 @@
       progressBar.style.width = pct + "%";
     }
 
+    // Track failed NAI codes for retry
+    let failedNAIs = [];
+
     function addErrorToList(code, reason) {
       errorListContainer.style.display = "block";
+      // Avoid duplicates in the list
+      if (!failedNAIs.includes(code)) {
+        failedNAIs.push(code);
+      }
       const item = document.createElement("div");
       item.className = "error-item";
+      item.dataset.code = code;
       item.innerHTML = `
         <span class="error-code">${code}</span>
         <span class="error-msg">${reason}</span>
@@ -834,6 +847,95 @@
       errorListBody.appendChild(item);
       const count = errorListBody.querySelectorAll(".error-item").length;
       errorCount.innerText = count;
+    }
+
+    function removeErrorFromList(code) {
+      const items = errorListBody.querySelectorAll(".error-item");
+      items.forEach(item => {
+        if (item.dataset.code === code) {
+          item.remove();
+        }
+      });
+      failedNAIs = failedNAIs.filter(c => c !== code);
+      const count = errorListBody.querySelectorAll(".error-item").length;
+      errorCount.innerText = count;
+      if (count === 0) {
+        errorListContainer.style.display = "none";
+      }
+    }
+
+    async function retryFailedNAIs() {
+      if (!apiSessionActive) {
+        alert("Primero conectá la API.");
+        return;
+      }
+      if (failedNAIs.length === 0) {
+        alert("No hay NAIs con error para reintentar.");
+        return;
+      }
+
+      const codesToRetry = [...failedNAIs]; // Copy
+      const btnRetry = document.getElementById("btn-retry");
+      btnRetry.disabled = true;
+      btnRetry.innerHTML = "⏳ Reintentando...";
+
+      ubDetail.style.display = "block";
+      let retried = 0;
+      let fixed = 0;
+
+      for (const code of codesToRetry) {
+        retried++;
+        ubDetail.innerText = `🔄 Reintentando ${retried}/${codesToRetry.length}...`;
+        updateProgress(retried, codesToRetry.length);
+
+        try {
+          const targetUrl = `${TARGET_API}/process-nai`;
+          const finalUrl = PROXY + encodeURIComponent(targetUrl);
+
+          const res = await fetch(finalUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nai: code })
+          });
+
+          const data = await res.json();
+
+          if (data.status === "Encontrado" && data.recetas && data.recetas.length > 0) {
+            let naiTotal = 0;
+            let paciente = data.recetas[0].paciente || "";
+            data.recetas.forEach(r => {
+              naiTotal += parseFloat(r.total_ub || 0);
+            });
+
+            totalUB += naiTotal;
+            ubValue.innerText = totalUB.toFixed(2);
+
+            if (window.markCodeProcessed) {
+              window.markCodeProcessed(code, naiTotal, paciente);
+            }
+
+            addBreakdownItem(code, naiTotal, paciente);
+            removeErrorFromList(code);
+            fixed++;
+          }
+          // If still not found, leave it in error list
+        } catch (e) {
+          console.error(`Retry error ${code}:`, e);
+          // Leave in error list
+        }
+      }
+
+      progressContainer.style.display = "none";
+      btnRetry.disabled = false;
+      btnRetry.innerHTML = "🔄 Reintentar";
+
+      if (fixed > 0) {
+        playSuccess();
+        ubDetail.innerText = `✔ ${fixed}/${codesToRetry.length} recuperados en reintento`;
+      } else {
+        ubDetail.innerText = `⚠️ Ninguno recuperado en reintento`;
+      }
+      ubDetail.style.background = "rgba(255,255,255,0.3)";
     }
 
     function addBreakdownItem(code, ub, paciente) {
