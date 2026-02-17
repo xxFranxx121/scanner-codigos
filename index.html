@@ -141,6 +141,39 @@
   <h1>FACTURADOR OPTIMI</h1>
   <p class="subtitle">Laboratorio de Análisis Banda</p>
 
+  <!-- API CONTROL PANEL -->
+  <div
+    style="background: white; max-width: 400px; margin: 10px auto; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+
+    <div style="text-align: left;">
+      <div id="api-status-indicator" style="font-size: 12px; font-weight: bold; color: #999;">🔴 Desconectado</div>
+      <div style="font-size: 10px; color: #ccc;">API UBS Railway</div>
+    </div>
+
+    <div>
+      <button id="btn-connect" onclick="toggleApiSession()"
+        style="background: #9e2a2b; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+        <span id="btn-connect-text">Conectar</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- TOTAL UB DISPLAY -->
+  <div id="ub-display" style="display: none; max-width: 400px; margin: 0 auto 15px auto;">
+    <div
+      style="background: linear-gradient(135deg, #9e2a2b 0%, #d9534f 100%); color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(158, 42, 43, 0.3);">
+      <div style="font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;">Total Unidades
+        Bioquímicas</div>
+      <div style="font-size: 36px; font-weight: 800; margin: 5px 0;">
+        <span id="total-ub-value">0.00</span> <span style="font-size: 16px; font-weight: 400;">UB</span>
+      </div>
+      <div id="last-ub-detail"
+        style="font-size: 11px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; display:none;">
+        <!-- Detalle dinámico -->
+      </div>
+    </div>
+  </div>
+
   <div id="reader"></div>
 
   <div id="result">
@@ -369,11 +402,179 @@
     ▶</button>
   `;
 
+        // --- API INTEGRATION CALL ---
+        if (window.processUbApi) {
+          // Non-blocking call to API
+          window.processUbApi(code).then(apiResult => {
+            if (apiResult && apiResult.found) {
+              // Optionally update the resultDiv with API info too?
+              // For now, the main UI has the big UB counter, so maybe just a small toast in the resultDiv?
+              const extraMsg = document.createElement("div");
+              extraMsg.style.marginTop = "10px";
+              extraMsg.style.fontSize = "12px";
+              extraMsg.style.color = "#fff";
+              extraMsg.style.background = "#9e2a2b";
+              extraMsg.style.padding = "5px";
+              extraMsg.style.borderRadius = "4px";
+              extraMsg.innerHTML = `💰 UB Agregadas: <b>${apiResult.total_ub}</b>`;
+              resultDiv.appendChild(extraMsg);
+            }
+          });
+        }
+        // ----------------------------
+
       } catch (error) {
         console.error("Error Firebase:", error);
         resultDiv.innerHTML = `❌ Error guardando: ${error.message}`;
       }
     };
+  </script>
+
+  <!-- 1.5 SCRIPT API UBS INTEGRATION -->
+  <script>
+    const API_BASE = "https://api-ubs-production.up.railway.app";
+    const API_USER = "RRSSRL";
+    const API_PASS = "30717143503"; // Hardcoded credentials
+
+    let apiSessionActive = false;
+    let totalUB = 0.0;
+
+    // UI Elements
+    const btnConnect = document.getElementById("btn-connect");
+    const btnText = document.getElementById("btn-connect-text");
+    const statusInd = document.getElementById("api-status-indicator");
+    const ubDisplay = document.getElementById("ub-display");
+    const ubValue = document.getElementById("total-ub-value");
+    const ubDetail = document.getElementById("last-ub-detail");
+
+    function updateApiUI(state) {
+      if (state === "connecting") {
+        btnConnect.style.background = "#ccc";
+        btnText.innerText = "Conectando...";
+        btnConnect.disabled = true;
+      } else if (state === "connected") {
+        apiSessionActive = true;
+        btnConnect.style.background = "#444";
+        btnText.innerText = "Desconectar";
+        btnConnect.disabled = false;
+        statusInd.innerHTML = "🟢 Conectado";
+        statusInd.style.color = "#28a745";
+        ubDisplay.style.display = "block";
+      } else if (state === "disconnected") {
+        apiSessionActive = false;
+        btnConnect.style.background = "#9e2a2b";
+        btnText.innerText = "Conectar";
+        btnConnect.disabled = false;
+        statusInd.innerHTML = "🔴 Desconectado";
+        statusInd.style.color = "#999";
+        ubDisplay.style.display = "none";
+        totalUB = 0.0;
+        ubValue.innerText = "0.00";
+      }
+    }
+
+
+    async function toggleApiSession() {
+      if (apiSessionActive) {
+        // Stop Session
+        try {
+          // Ideally call /stop-session but simply resetting local state is faster for UI responsiveness
+          // We can fire-and-forget the stop call if strict resource mgmt is needed, currently just resetting.
+          // await fetch(`${API_BASE}/stop-session`, { method: "POST" }); 
+          // The instructions say "Stop Session" endpoint exists, so let's try to be nice.
+          fetch(`${API_BASE}/stop-session`, { method: "POST" }).catch(e => console.warn("Error stopping session", e));
+        } catch (e) {
+          console.error(e);
+        } finally {
+          updateApiUI("disconnected");
+        }
+      } else {
+        // Start Session
+        updateApiUI("connecting");
+        try {
+          const today = new Date();
+          const startYear = today.getFullYear();
+          // Hardcoding a wide range or current year as per requirement needed? 
+          // User prompts didn't specify dynamic dates, but example used 2026. 
+          // Let's use current year dynamically relative to the prompt context (2026).
+          // Time provided in metadata is 2026.
+
+          const payload = {
+            user: API_USER,
+            password: API_PASS,
+            fecha_desde: `01/01/${startYear}`,
+            fecha_hasta: `31/12/${startYear}`,
+            headless: true
+          };
+
+          const res = await fetch(`${API_BASE}/start-session`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          if (!res.ok) throw new Error("Error en login API");
+
+          const data = await res.json();
+          console.log("API Login:", data);
+          updateApiUI("connected");
+
+        } catch (e) {
+          console.error(e);
+          alert("Error conectando a la API: " + e.message);
+          updateApiUI("disconnected");
+        }
+      }
+    }
+
+    async function processUbApi(nai) {
+      if (!apiSessionActive) return null; // Do nothing if not connected
+
+      try {
+        ubDetail.style.display = "block";
+        ubDetail.innerText = "⏳ Buscando en API...";
+
+        const res = await fetch(`${API_BASE}/process-nai`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nai: nai })
+        });
+
+        const data = await res.json();
+        console.log("API Process:", data);
+
+        if (data.status === "Encontrado" && data.recetas && data.recetas.length > 0) {
+          // Sumar UBs
+          let naiTotal = 0;
+          data.recetas.forEach(r => {
+            naiTotal += parseFloat(r.total_ub || 0);
+          });
+
+          totalUB += naiTotal;
+          ubValue.innerText = totalUB.toFixed(2);
+
+          // Show details of first found
+          const first = data.recetas[0];
+          ubDetail.innerText = `✔ ${first.paciente} (+${naiTotal.toFixed(2)})`;
+          ubDetail.style.background = "rgba(255,255,255,0.3)";
+
+          return {
+            found: true,
+            total_ub: naiTotal,
+            details: data.recetas
+          };
+        } else {
+          ubDetail.innerText = "❌ No encontrado en API";
+          ubDetail.style.background = "rgba(0,0,0,0.1)";
+          return { found: false };
+        }
+
+      } catch (e) {
+        console.error("API Error processing NAI", e);
+        ubDetail.innerText = "⚠️ Error API";
+        return { error: e };
+      }
+    }
   </script>
 
   <!-- 2. SCRIPT DEL SCANNER (LÓGICA ORIGINAL) -->
