@@ -361,14 +361,9 @@
   <!-- MANUAL INPUT -->
   <div class="manual-input-wrapper">
     <input type="text" id="manual-nai" placeholder="Ingresar NAI manual">
-    <button class="btn-manual" onclick="handleManualNai()">✚</button>
-    <button class="btn-manual" style="background:#ccc; color:#333;" onclick="toggleManualDelete()">🗑️</button>
-  </div>
-
-  <!-- MANUAL DELETE (Hidden) -->
-  <div class="manual-input-wrapper" id="manual-delete-container">
-    <input type="number" id="manual-delete-nai" placeholder="NAI a eliminar" style="border-color:#9e2a2b;">
-    <button class="btn-manual btn-delete-manual" onclick="window.initiateManualDelete()">Eliminar</button>
+    <button class="btn-manual" onclick="handleManualNai()" title="Agregar">+</button>
+    <button class="btn-manual" style="background:#9e2a2b; color:white;" onclick="window.initiateManualDelete()"
+      title="Eliminar">🗑️</button>
   </div>
 
   <div id="debug-log"
@@ -434,22 +429,10 @@
       }
     }
 
-    function toggleManualDelete() {
-      const div = document.getElementById("manual-delete-container");
-      div.style.display = (div.style.display === "none" || !div.style.display) ? "flex" : "none";
-    }
-
-    // Permitir Enter en el input
+    // Permitir Enter en el input (Default to Add)
     document.getElementById("manual-nai")?.addEventListener("keypress", function (e) {
       if (e.key === "Enter") {
         handleManualNai();
-      }
-    });
-
-    // Permitir Enter en delete input
-    document.getElementById("manual-delete-nai")?.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") {
-        window.initiateManualDelete();
       }
     });
   </script>
@@ -701,9 +684,12 @@
 
     // --- MANUAL DELETE LOGIC ---
     window.initiateManualDelete = async function () {
-      const input = document.getElementById("manual-delete-nai");
-      const nai = input.value.trim();
-      if (!nai) return;
+      const input = document.getElementById("manual-nai");
+      const nai = input.value.trim().toUpperCase();
+      if (!nai) {
+        alert("Ingresa un NAI para eliminar");
+        return;
+      }
 
       // Find docId by NAI
       const q = query(collection(db, CODES_COLLECTION), where("code", "==", nai), orderBy("timestamp", "desc"), limit(1));
@@ -779,7 +765,7 @@
         resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
 
         // Clear manual input if it was used
-        document.getElementById("manual-delete-nai").value = "";
+        document.getElementById("manual-nai").value = "";
 
         setTimeout(() => {
           if (window.restartScanner) {
