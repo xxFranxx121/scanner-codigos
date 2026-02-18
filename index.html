@@ -950,8 +950,9 @@
         errorListBody.appendChild(item);
       }
 
-      const isTimeout = reason.toLowerCase().includes("timeout") || reason.includes("504") || reason.includes("502");
-      const displayReason = isTimeout ? "⚠️ Posible Timeout de Proxy (30s+)" : reason;
+      const reasonStr = String(reason || "");
+      const isTimeout = reasonStr.toLowerCase().includes("timeout") || reasonStr.includes("504") || reasonStr.includes("502");
+      const displayReason = isTimeout ? "⚠️ Posible Timeout de Proxy (30s+)" : reasonStr;
 
       item.innerHTML = `
         <span class="error-code">${code}</span>
