@@ -963,13 +963,21 @@
             body: JSON.stringify({ nai: code })
           });
 
-          if (!res.ok) {
-            addErrorToList(code, `Error HTTP ${res.status}`);
+          let data;
+          try {
+            data = await res.json();
+          } catch (e) {
+            const text = await res.text().catch(() => "");
+            addErrorToList(code, `Error HTTP ${res.status}: ${text || "No JSON"}`);
             continue;
           }
 
-          const data = await res.json();
           console.log(`Reintento para ${code}:`, data);
+
+          if (!res.ok) {
+            addErrorToList(code, data.error || data.status || `Error ${res.status}`);
+            continue;
+          }
 
           if (data.recetas && data.recetas.length > 0) {
             let naiTotal = 0;
@@ -1150,14 +1158,23 @@
             body: JSON.stringify({ nai: codeObj.code })
           });
 
-          if (!res.ok) {
-            addErrorToList(codeObj.code, `Error HTTP ${res.status}`);
+          let data;
+          try {
+            data = await res.json();
+          } catch (e) {
+            const text = await res.text().catch(() => "");
+            addErrorToList(codeObj.code, `Err HTTP ${res.status}: ${text || "No JSON"}`);
             processed++;
             continue;
           }
 
-          const data = await res.json();
           console.log(`Respuesta API para ${codeObj.code}:`, data);
+
+          if (!res.ok) {
+            addErrorToList(codeObj.code, data.error || data.status || `Error ${res.status}`);
+            processed++;
+            continue;
+          }
 
           if (data.recetas && data.recetas.length > 0) {
             let naiTotal = 0;
@@ -1217,8 +1234,25 @@
           body: JSON.stringify({ nai: nai })
         });
 
-        const data = await res.json();
+        let data;
+        try {
+          data = await res.json();
+        } catch (e) {
+          const text = await res.text().catch(() => "");
+          const msg = `Error ${res.status}: ${text || "Invalid JSON"}`;
+          ubDetail.innerText = `❌ ${msg}`;
+          addErrorToList(nai, msg);
+          return { found: false };
+        }
+
         console.log("API Process Individual:", data);
+
+        if (!res.ok) {
+          const reason = data.error || data.status || `Error ${res.status}`;
+          ubDetail.innerText = `❌ ${reason}`;
+          addErrorToList(nai, reason);
+          return { found: false };
+        }
 
         if (data.recetas && data.recetas.length > 0) {
           let naiTotal = 0;
