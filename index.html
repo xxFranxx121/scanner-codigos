@@ -953,10 +953,11 @@
           });
 
           const data = await res.json();
+          console.log(`Reintento para ${code}:`, data);
 
-          if (data.status === "Encontrado" && data.recetas && data.recetas.length > 0) {
+          if (data.recetas && data.recetas.length > 0) {
             let naiTotal = 0;
-            let paciente = data.recetas[0].paciente || "";
+            let paciente = data.recetas[0].paciente || "Paciente Desconocido";
             data.recetas.forEach(r => {
               naiTotal += parseFloat(r.total_ub || 0);
             });
@@ -972,7 +973,7 @@
             removeErrorFromList(code);
             fixed++;
           }
-          // If still not found, leave it in error list
+          // If still no data, leave it in error list with updated log in console
         } catch (e) {
           console.error(`Retry error ${code}:`, e);
           // Leave in error list
@@ -1129,10 +1130,11 @@
           });
 
           const data = await res.json();
+          console.log(`Respuesta API para ${codeObj.code}:`, data);
 
-          if (data.status === "Encontrado" && data.recetas && data.recetas.length > 0) {
+          if (data.recetas && data.recetas.length > 0) {
             let naiTotal = 0;
-            let paciente = data.recetas[0].paciente || "";
+            let paciente = data.recetas[0].paciente || "Paciente Desconocido";
             data.recetas.forEach(r => {
               naiTotal += parseFloat(r.total_ub || 0);
             });
@@ -1140,14 +1142,14 @@
             totalUB += naiTotal;
             ubValue.innerText = totalUB.toFixed(2);
 
-            // Persist in Firebase
             if (window.markCodeProcessed) {
               window.markCodeProcessed(codeObj.code, naiTotal, paciente);
             }
 
             addBreakdownItem(codeObj.code, naiTotal, paciente);
           } else {
-            addErrorToList(codeObj.code, "No encontrado");
+            const reason = data.status || data.error || "Sin datos";
+            addErrorToList(codeObj.code, reason);
           }
         } catch (e) {
           console.error(`Error procesando ${codeObj.code}:`, e);
@@ -1189,11 +1191,11 @@
         });
 
         const data = await res.json();
-        console.log("API Process:", data);
+        console.log("API Process Individual:", data);
 
-        if (data.status === "Encontrado" && data.recetas && data.recetas.length > 0) {
+        if (data.recetas && data.recetas.length > 0) {
           let naiTotal = 0;
-          let paciente = data.recetas[0].paciente || "";
+          let paciente = data.recetas[0].paciente || "Paciente Desconocido";
           data.recetas.forEach(r => {
             naiTotal += parseFloat(r.total_ub || 0);
           });
@@ -1213,9 +1215,10 @@
             details: data.recetas
           };
         } else {
-          ubDetail.innerText = "❌ No encontrado en API";
+          const reason = data.status || "No encontrado";
+          ubDetail.innerText = `❌ ${reason}`;
           ubDetail.style.background = "rgba(0,0,0,0.1)";
-          addErrorToList(nai, "No encontrado");
+          addErrorToList(nai, reason);
           return { found: false };
         }
 
