@@ -368,7 +368,7 @@
   <!-- MANUAL DELETE (Hidden) -->
   <div class="manual-input-wrapper" id="manual-delete-container">
     <input type="number" id="manual-delete-nai" placeholder="NAI a eliminar" style="border-color:#9e2a2b;">
-    <button class="btn-manual btn-delete-manual" onclick="handleManualDeleteSearch()">Eliminar</button>
+    <button class="btn-manual btn-delete-manual" onclick="window.initiateManualDelete()">Eliminar</button>
   </div>
 
   <div id="debug-log"
@@ -434,10 +434,22 @@
       }
     }
 
+    function toggleManualDelete() {
+      const div = document.getElementById("manual-delete-container");
+      div.style.display = (div.style.display === "none" || !div.style.display) ? "flex" : "none";
+    }
+
     // Permitir Enter en el input
     document.getElementById("manual-nai")?.addEventListener("keypress", function (e) {
       if (e.key === "Enter") {
         handleManualNai();
+      }
+    });
+
+    // Permitir Enter en delete input
+    document.getElementById("manual-delete-nai")?.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        window.initiateManualDelete();
       }
     });
   </script>
