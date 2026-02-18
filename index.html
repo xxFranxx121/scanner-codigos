@@ -749,7 +749,30 @@
       if (!docId) return;
 
       try {
-        await deleteDoc(doc(db, CODES_COLLECTION, docId));
+        const docRef = doc(db, CODES_COLLECTION, docId);
+
+        // 1. Get doc data to check UB
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.ub_processed && data.ub_value) {
+            const val = parseFloat(data.ub_value);
+            if (val > 0) {
+              totalUB -= val;
+              if (totalUB < 0) totalUB = 0;
+
+              // Update UI immediately
+              const ubDisplay = document.getElementById("total-ub-value");
+              if (ubDisplay) ubDisplay.innerText = totalUB.toFixed(2);
+
+              // console.log(`Restadas ${val} UB. Nuevo total: ${totalUB}`);
+            }
+          }
+        }
+
+        // 2. Delete
+        await deleteDoc(docRef);
+
         if (window.closeModal) window.closeModal();
 
         const resultDiv = document.getElementById("result");
