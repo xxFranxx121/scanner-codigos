@@ -360,6 +360,17 @@
 
   <div id="reader"></div>
 
+  <!-- MANUAL INPUT -->
+  <div
+    style="max-width: 400px; margin: 0 auto 20px auto; display: flex; gap: 10px; padding: 0 5px; box-sizing: border-box;">
+    <input type="text" id="manual-nai" placeholder="Ingresar NAI manual..."
+      style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s;">
+    <button onclick="handleManualNai()"
+      style="background: #9e2a2b; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+      Cargar
+    </button>
+  </div>
+
   <div id="result">
     <span style="color:#777">Esperando escaneo...</span>
   </div>
@@ -379,6 +390,35 @@
     ✔ Mantenga el código horizontal y con buena luz.<br>
     ✔ Sistema optimizado para Códigos 39.
   </p>
+
+  <script>
+    async function handleManualNai() {
+      const input = document.getElementById("manual-nai");
+      const code = input.value.trim().toUpperCase();
+
+      if (!code) {
+        alert("Por favor, ingrese un código NAI.");
+        return;
+      }
+
+      // Limpiar input
+      input.value = "";
+
+      // Procesar usando la lógica existente
+      if (window.checkAndSaveCode) {
+        window.checkAndSaveCode(code);
+      } else {
+        alert("Base de datos no cargada aún.");
+      }
+    }
+
+    // Permitir Enter en el input
+    document.getElementById("manual-nai")?.addEventListener("keypress", function (e) {
+      if (e.key === "Enter") {
+        handleManualNai();
+      }
+    });
+  </script>
 
   <div id="auth-modal"
     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
@@ -518,7 +558,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDoc, setDoc
+      getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDoc, setDoc, limit
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -548,34 +588,31 @@
     // --- LOAD PERSISTED UB ON PAGE LOAD ---
     async function loadPersistedUB() {
       try {
-        const q = query(collection(db, CODES_COLLECTION));
-        const snapshot = await getDocs(q);
+        const allCodes = await window.getAllCodes();
         let total = 0;
-        let count = 0;
+        let processedCount = 0;
 
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if (data.ub_processed && data.ub_value) {
-            total += parseFloat(data.ub_value);
-            count++;
+        allCodes.forEach(c => {
+          if (c.ub_processed) {
+            total += parseFloat(c.ub_value || 0);
+            processedCount++;
           }
         });
 
-        if (total > 0) {
-          // Show persisted UB even when disconnected
-          const ubDisplay = document.getElementById("ub-display");
-          const ubValue = document.getElementById("total-ub-value");
-          const ubDetail = document.getElementById("last-ub-detail");
+        // Set global totalUB so the API script picks up from here
+        window._persistedTotalUB = total;
+        window._persistedCount = processedCount;
 
+        const ubDisplay = document.getElementById("ub-display");
+        const ubValue = document.getElementById("total-ub-value");
+        const ubDetail = document.getElementById("last-ub-detail");
+
+        if (processedCount > 0) {
           ubDisplay.style.display = "block";
           ubValue.innerText = total.toFixed(2);
           ubDetail.style.display = "block";
-          ubDetail.innerText = `📦 ${count} códigos con UB guardadas`;
+          ubDetail.innerText = `📦 ${processedCount} códigos cargados de Firebase`;
           ubDetail.style.background = "rgba(255,255,255,0.2)";
-
-          // Set global totalUB so the API script picks up from here
-          window._persistedTotalUB = total;
-          window._persistedCount = count;
         }
       } catch (e) {
         console.error("Error cargando UB persistidas:", e);
@@ -587,7 +624,7 @@
       const historyList = document.getElementById("history-list");
       if (!historyList) return;
 
-      const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"));
+      const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"), limit(5));
 
       onSnapshot(q, (snapshot) => {
         historyList.innerHTML = "";
@@ -722,23 +759,40 @@
       }
     };
 
-    // Obtener todos los códigos
+    // Obtener todos los códigos (DEDUP por NAI)
     window.getAllCodes = async function () {
       if (!db) return [];
       try {
         const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"));
         const snapshot = await getDocs(q);
-        const codes = [];
+        const codeMap = new Map();
+
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          codes.push({
-            id: docSnap.id,
-            code: data.code,
-            ub_processed: data.ub_processed || false,
-            ub_value: data.ub_value || 0
-          });
+          const code = data.code;
+
+          // Si el código ya está, y el nuevo NO está procesado, ignorar.
+          // Si el que tenemos NO está procesado pero el nuevo SI, reemplazar.
+          if (codeMap.has(code)) {
+            const existing = codeMap.get(code);
+            if (!existing.ub_processed && data.ub_processed) {
+              codeMap.set(code, {
+                id: docSnap.id,
+                code: code,
+                ub_processed: true,
+                ub_value: data.ub_value || 0
+              });
+            }
+          } else {
+            codeMap.set(code, {
+              id: docSnap.id,
+              code: code,
+              ub_processed: data.ub_processed || false,
+              ub_value: data.ub_value || 0
+            });
+          }
         });
-        return codes;
+        return Array.from(codeMap.values());
       } catch (e) {
         console.error("Error obteniendo códigos:", e);
         return [];
@@ -791,7 +845,7 @@
     const breakdownBody = document.getElementById("breakdown-body");
     const breakdownCount = document.getElementById("breakdown-count");
 
-    // Initialize from persisted
+    // Initialize from persisted (with deduplication safety)
     if (window._persistedTotalUB) {
       totalUB = window._persistedTotalUB;
       ubValue.innerText = totalUB.toFixed(2);
@@ -1029,23 +1083,35 @@
 
       const allCodes = await window.getAllCodes();
 
-      // Load already-processed codes into breakdown
+      // Recalcular totalUB inicial desde el DB deduplicado para evitar saltos o duplicados
+      totalUB = 0;
       const unprocessed = [];
+      const alreadyProcessedCodes = [];
+
       allCodes.forEach(c => {
-        if (c.ub_processed && c.ub_value > 0) {
-          addBreakdownItem(c.code, c.ub_value, "");
-        } else if (!c.ub_processed) {
+        if (c.ub_processed) {
+          totalUB += parseFloat(c.ub_value || 0);
+          alreadyProcessedCodes.push(c);
+        } else {
           unprocessed.push(c);
         }
       });
 
+      // Actualizar UI con el total real deducido
+      ubValue.innerText = totalUB.toFixed(2);
+      alreadyProcessedCodes.forEach(c => {
+        if (parseFloat(c.ub_value) > 0) {
+          addBreakdownItem(c.code, c.ub_value, "");
+        }
+      });
+
       if (unprocessed.length === 0) {
-        ubDetail.innerText = `✔ Todo procesado (${allCodes.length} códigos)`;
+        ubDetail.innerText = `✔ Todo procesado (${allCodes.length} únicos)`;
         progressContainer.style.display = "none";
         return;
       }
 
-      ubDetail.innerText = `⏳ Procesando 0/${unprocessed.length} pendientes...`;
+      ubDetail.innerText = `⏳ Procesando 0/${unprocessed.length} NAIs únicos pendientes...`;
 
       let processed = 0;
 
