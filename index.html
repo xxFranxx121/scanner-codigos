@@ -1528,6 +1528,69 @@
       }
     }
 
+    // --- ACCESS CONTROL SYSTEM ---
+    let isLoggedIn = false;
+    const adminControls = document.getElementById("admin-controls");
+    const loginBtn = document.getElementById("btn-login");
+
+    window.toggleLogin = function () {
+      if (isLoggedIn) {
+        // Logout
+        isLoggedIn = false;
+        updateAuthUI();
+      } else {
+        // Show Login Modal
+        window.pendingDocId = "LOGIN_ACTION"; // reuse existing slot
+        document.getElementById("auth-modal").style.display = "flex";
+        document.getElementById("admin-pass").focus();
+      }
+    };
+
+    function updateAuthUI() {
+      if (isLoggedIn) {
+        adminControls.style.display = "block";
+        loginBtn.innerText = "🔓 Salir";
+        loginBtn.style.background = "#444";
+      } else {
+        adminControls.style.display = "none";
+        loginBtn.innerText = "🔒 Login";
+        loginBtn.style.background = "#9e2a2b";
+      }
+    }
+
+    // Hook into existing modal confirm
+    const originalConfirm = window.confirmDelete;
+    window.confirmDelete = async function () {
+      if (window.pendingDocId === "LOGIN_ACTION") {
+        const input = document.getElementById("admin-pass");
+        if (input.value === "1234") { // Simple hardcoded pass as requested
+          isLoggedIn = true;
+          updateAuthUI();
+          window.closeModal();
+          input.value = "";
+        } else {
+          alert("Clave incorrecta");
+          input.value = "";
+        }
+        return;
+      }
+      // Fallback to original delete logic
+      if (originalConfirm) await originalConfirm();
+    };
+
+
+    // Only call API if logged in
+    const realProcessUbApi = window.processUbApi;
+    window.processUbApi = async function (nai) {
+      if (!isLoggedIn) {
+        const resultDiv = document.getElementById("result");
+        // Silent skip or small log?
+        console.log("Skipping API for " + nai + " (Not logged in)");
+        return null;
+      }
+      return await realProcessUbApi(nai);
+    };
+
     startScanner();
   </script>
 
