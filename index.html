@@ -288,966 +288,1119 @@
   <h1>FACTURADOR OPTIMI</h1>
   <p class="subtitle">Laboratorio de Análisis Banda</p>
 
-  <!-- API CONTROL PANEL -->
-  <div
-    style="background: white; max-width: 400px; margin: 10px auto; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+  <button id="btn-login" onclick="toggleLogin()"
+    style="position:absolute; top:20px; right:20px; background:#9e2a2b; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">🔒
+    Login</button>
 
-    <div style="text-align: left;">
-      <div id="api-status-indicator" style="font-size: 12px; font-weight: bold; color: #999;">🔴 Desconectado</div>
-      <div style="font-size: 10px; color: #ccc;">API UBS Railway</div>
-      <label
-        style="font-size: 9px; color: #666; display: flex; align-items: center; gap: 3px; cursor: pointer; margin-top: 3px;">
-        <input type="checkbox" id="chk-direct-mode" style="margin:0;"> Modo Directo (Requiere Extensión)
-      </label>
-    </div>
+  <div id="admin-controls" style="display:none;">
 
-    <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
-      <select id="sel-api-channel" style="font-size:10px; padding:2px; border-radius:4px; border:1px solid #ccc;">
-        <option value="proxy1">Canal 1 (Proxy)</option>
-        <option value="proxy2">Canal 2 (Proxy)</option>
-        <option value="direct">Modo Directo (Extensión)</option>
-      </select>
-      <div style="display:flex; gap:5px;">
-        <button id="btn-reset-session" onclick="forceResetSession()" title="Resetear sesión API"
-          style="background: #f0f0f0; border: 1px solid #ddd; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer;">
-          🔄
-        </button>
-        <button id="btn-connect" onclick="toggleApiSession()"
-          style="background: #9e2a2b; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-          <span id="btn-connect-text">Conectar</span>
-        </button>
+    <button id="btn-login" onclick="toggleLogin()"
+      style="position:absolute; top:20px; right:20px; background:#9e2a2b; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">🔒
+      Login</button>
+
+    <div id="admin-controls" style="display:none;">
+      <!-- API CONTROL PANEL -->
+      <div
+        style="background: white; max-width: 400px; margin: 10px auto; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
+
+        <div style="text-align: left;">
+          <div id="api-status-indicator" style="font-size: 12px; font-weight: bold; color: #999;">🔴 Desconectado</div>
+          <div style="font-size: 10px; color: #ccc;">API UBS Railway</div>
+          <label
+            style="font-size: 9px; color: #666; display: flex; align-items: center; gap: 3px; cursor: pointer; margin-top: 3px;">
+            <input type="checkbox" id="chk-direct-mode" style="margin:0;"> Modo Directo (Requiere Extensión)
+          </label>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+          <select id="sel-api-channel" style="font-size:10px; padding:2px; border-radius:4px; border:1px solid #ccc;">
+            <option value="proxy1">Canal 1 (Proxy)</option>
+            <option value="proxy2">Canal 2 (Proxy)</option>
+            <option value="direct">Modo Directo (Extensión)</option>
+          </select>
+          <div style="display:flex; gap:5px;">
+            <button id="btn-reset-session" onclick="forceResetSession()" title="Resetear sesión API"
+              style="background: #f0f0f0; border: 1px solid #ddd; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer;">
+              🔄
+            </button>
+            <button id="btn-connect" onclick="toggleApiSession()"
+              style="background: #9e2a2b; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+              <span id="btn-connect-text">Conectar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="api-debug-log"
+        style="display:none; max-width:400px; margin: 5px auto; font-family:monospace; font-size:9px; text-align:left; background:#1e1e1e; color:#0f0; padding:10px; border-radius:5px; max-height:100px; overflow-y:auto; border: 2px solid #333;">
+        [API DEBUG LOG]
+      </div>
+
+      <!-- TOTAL UB DISPLAY -->
+      <div id="ub-display" style="display: none; max-width: 400px; margin: 0 auto 10px auto;">
+        <div
+          style="background: linear-gradient(135deg, #9e2a2b 0%, #d9534f 100%); color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(158, 42, 43, 0.3);">
+          <div style="font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;">Total Unidades
+            Bioquímicas</div>
+          <div style="font-size: 36px; font-weight: 800; margin: 5px 0;">
+            <span id="total-ub-value">0.00</span> <span style="font-size: 16px; font-weight: 400;">UB</span>
+          </div>
+          <div id="last-ub-detail"
+            style="font-size: 11px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; display:none;">
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div id="api-debug-log"
-    style="display:none; max-width:400px; margin: 5px auto; font-family:monospace; font-size:9px; text-align:left; background:#1e1e1e; color:#0f0; padding:10px; border-radius:5px; max-height:100px; overflow-y:auto; border: 2px solid #333;">
-    [API DEBUG LOG]
-  </div>
+    <!-- PROGRESS BAR -->
+    <div id="progress-container" class="progress-container">
+      <div id="progress-bar" class="progress-bar"></div>
+    </div>
 
-  <!-- TOTAL UB DISPLAY -->
-  <div id="ub-display" style="display: none; max-width: 400px; margin: 0 auto 10px auto;">
+    <!-- TOOLBAR (Sound, Export) -->
+    <div class="toolbar" id="toolbar" style="display:none;">
+      <button id="btn-sound" onclick="toggleSound()">🔊 Sonido</button>
+      <button id="btn-export" onclick="exportCSV()">📤 Exportar CSV</button>
+    </div>
+
+    <!-- ERROR LIST (Live) -->
+    <div id="error-list-container" class="error-list-container">
+      <div class="error-list-header">
+        <span onclick="toggleErrorList()" style="flex:1; cursor:pointer;">❌ <strong>NAIs con Error</strong> (<span
+            id="error-count">0</span>)</span>
+        <span id="error-toggle-icon" onclick="toggleErrorList()" style="cursor:pointer;">▼</span>
+        <button id="btn-retry" onclick="retryFailedNAIs()"
+          style="margin-left:8px; background:#cc0000; color:white; border:none; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:3px;">
+          🔄 Reintentar
+        </button>
+      </div>
+      <div id="error-list-body" style="display:none; margin-top: 4px;">
+        <!-- Error items appended here -->
+      </div>
+    </div>
+
+    <!-- BREAKDOWN LIST -->
+    <div id="breakdown-container" class="breakdown-container">
+      <div class="breakdown-header" onclick="toggleBreakdown()">
+        <span>📊 <strong>Desglose por NAI</strong> (<span id="breakdown-count">0</span>)</span>
+        <span id="breakdown-toggle-icon">▼</span>
+      </div>
+      <div id="breakdown-body" style="display:none; margin-top: 4px;">
+        <!-- Breakdown items appended here -->
+      </div>
+    </div>
+
+    <div id="reader"></div>
+
+    <!-- MANUAL INPUT -->
     <div
-      style="background: linear-gradient(135deg, #9e2a2b 0%, #d9534f 100%); color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(158, 42, 43, 0.3);">
-      <div style="font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;">Total Unidades
-        Bioquímicas</div>
-      <div style="font-size: 36px; font-weight: 800; margin: 5px 0;">
-        <span id="total-ub-value">0.00</span> <span style="font-size: 16px; font-weight: 400;">UB</span>
-      </div>
-      <div id="last-ub-detail"
-        style="font-size: 11px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; display:none;">
-      </div>
-    </div>
-  </div>
-
-  <!-- PROGRESS BAR -->
-  <div id="progress-container" class="progress-container">
-    <div id="progress-bar" class="progress-bar"></div>
-  </div>
-
-  <!-- TOOLBAR (Sound, Export) -->
-  <div class="toolbar" id="toolbar" style="display:none;">
-    <button id="btn-sound" onclick="toggleSound()">🔊 Sonido</button>
-    <button id="btn-export" onclick="exportCSV()">📤 Exportar CSV</button>
-  </div>
-
-  <!-- ERROR LIST (Live) -->
-  <div id="error-list-container" class="error-list-container">
-    <div class="error-list-header">
-      <span onclick="toggleErrorList()" style="flex:1; cursor:pointer;">❌ <strong>NAIs con Error</strong> (<span
-          id="error-count">0</span>)</span>
-      <span id="error-toggle-icon" onclick="toggleErrorList()" style="cursor:pointer;">▼</span>
-      <button id="btn-retry" onclick="retryFailedNAIs()"
-        style="margin-left:8px; background:#cc0000; color:white; border:none; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:3px;">
-        🔄 Reintentar
+      style="max-width: 400px; margin: 0 auto 20px auto; display: flex; gap: 10px; padding: 0 5px; box-sizing: border-box;">
+      <input type="text" id="manual-nai" placeholder="Ingresar NAI manual..."
+        style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s;">
+      <button onclick="handleManualNai()"
+        style="background: #9e2a2b; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
+        Cargar
       </button>
     </div>
-    <div id="error-list-body" style="display:none; margin-top: 4px;">
-      <!-- Error items appended here -->
+
+    <div id="result">
+      <span style="color:#777">Esperando escaneo...</span>
     </div>
-  </div>
 
-  <!-- BREAKDOWN LIST -->
-  <div id="breakdown-container" class="breakdown-container">
-    <div class="breakdown-header" onclick="toggleBreakdown()">
-      <span>📊 <strong>Desglose por NAI</strong> (<span id="breakdown-count">0</span>)</span>
-      <span id="breakdown-toggle-icon">▼</span>
+    <div id="debug-log"
+      style="display:none; color:red; font-size:12px; margin-top:20px; text-align:left; background:#ffeded; padding:10px; border:1px solid red;">
     </div>
-    <div id="breakdown-body" style="display:none; margin-top: 4px;">
-      <!-- Breakdown items appended here -->
+
+    <div id="history-container">
+      <h3>🕒 Historial de Muestras</h3>
+      <ul id="history-list" style="list-style: none; padding: 0;">
+        <li style="color: #999; font-style: italic; text-align:center;">Cargando...</li>
+      </ul>
     </div>
-  </div>
 
-  <div id="reader"></div>
+    <p class="hint">
+      ✔ Mantenga el código horizontal y con buena luz.<br>
+      ✔ Sistema optimizado para Códigos 39.
+    </p>
 
-  <!-- MANUAL INPUT -->
-  <div
-    style="max-width: 400px; margin: 0 auto 20px auto; display: flex; gap: 10px; padding: 0 5px; box-sizing: border-box;">
-    <input type="text" id="manual-nai" placeholder="Ingresar NAI manual..."
-      style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s;">
-    <button onclick="handleManualNai()"
-      style="background: #9e2a2b; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-      Cargar
-    </button>
-  </div>
+    <script>
+      async function handleManualNai() {
+        const input = document.getElementById("manual-nai");
+        const code = input.value.trim().toUpperCase();
 
-  <div id="result">
-    <span style="color:#777">Esperando escaneo...</span>
-  </div>
+        if (!code) {
+          alert("Por favor, ingrese un código NAI.");
+          return;
+        }
 
-  <div id="debug-log"
-    style="display:none; color:red; font-size:12px; margin-top:20px; text-align:left; background:#ffeded; padding:10px; border:1px solid red;">
-  </div>
+        // Limpiar input
+        input.value = "";
 
-  <div id="history-container">
-    <h3>🕒 Historial de Muestras</h3>
-    <ul id="history-list" style="list-style: none; padding: 0;">
-      <li style="color: #999; font-style: italic; text-align:center;">Cargando...</li>
-    </ul>
-  </div>
-
-  <p class="hint">
-    ✔ Mantenga el código horizontal y con buena luz.<br>
-    ✔ Sistema optimizado para Códigos 39.
-  </p>
-
-  <script>
-    async function handleManualNai() {
-      const input = document.getElementById("manual-nai");
-      const code = input.value.trim().toUpperCase();
-
-      if (!code) {
-        alert("Por favor, ingrese un código NAI.");
-        return;
+        // Procesar usando la lógica existente
+        if (window.checkAndSaveCode) {
+          window.checkAndSaveCode(code);
+        } else {
+          alert("Base de datos no cargada aún.");
+        }
       }
 
-      // Limpiar input
-      input.value = "";
+      // Permitir Enter en el input
+      document.getElementById("manual-nai")?.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          handleManualNai();
+        }
+      });
+    </script>
 
-      // Procesar usando la lógica existente
-      if (window.checkAndSaveCode) {
-        window.checkAndSaveCode(code);
-      } else {
-        alert("Base de datos no cargada aún.");
-      }
-    }
+    <div id="auth-modal"
+      style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+      <div
+        style="background:white; padding:25px; border-radius:12px; width:85%; max-width:320px; text-align:center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-top: 6px solid #9e2a2b;">
+        <h3 style="margin-top:0; color:#9e2a2b; border:none;">🔐 Acceso Admin</h3>
+        <p style="color:#666; font-size:14px;">Para eliminar el registro, ingrese la clave:</p>
 
-    // Permitir Enter en el input
-    document.getElementById("manual-nai")?.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") {
-        handleManualNai();
-      }
-    });
-  </script>
+        <input type="number" id="admin-pass" placeholder="Clave (1234)"
+          style="width:100%; padding:12px; box-sizing:border-box; margin-bottom:20px; border:1px solid #ccc; border-radius:6px; font-size:18px; text-align:center;">
 
-  <div id="auth-modal"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-    <div
-      style="background:white; padding:25px; border-radius:12px; width:85%; max-width:320px; text-align:center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-top: 6px solid #9e2a2b;">
-      <h3 style="margin-top:0; color:#9e2a2b; border:none;">🔐 Acceso Admin</h3>
-      <p style="color:#666; font-size:14px;">Para eliminar el registro, ingrese la clave:</p>
-
-      <input type="number" id="admin-pass" placeholder="Clave (1234)"
-        style="width:100%; padding:12px; box-sizing:border-box; margin-bottom:20px; border:1px solid #ccc; border-radius:6px; font-size:18px; text-align:center;">
-
-      <div style="display:flex; justify-content:space-between; gap:10px;">
-        <button onclick="closeModal()"
-          style="flex:1; background:#f0f0f0; color:#333; border:none; padding:12px; border-radius:6px; font-weight:bold; cursor:pointer;">
-          Cancelar
-        </button>
-        <button onclick="window.confirmDelete()"
-          style="flex:1; background:#9e2a2b; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold; box-shadow: 0 2px 5px rgba(158,42,43,0.3); cursor:pointer;">
-          Eliminar
-        </button>
+        <div style="display:flex; justify-content:space-between; gap:10px;">
+          <button onclick="closeModal()"
+            style="flex:1; background:#f0f0f0; color:#333; border:none; padding:12px; border-radius:6px; font-weight:bold; cursor:pointer;">
+            Cancelar
+          </button>
+          <button onclick="window.confirmDelete()"
+            style="flex:1; background:#9e2a2b; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold; box-shadow: 0 2px 5px rgba(158,42,43,0.3); cursor:pointer;">
+            Eliminar
+          </button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <footer>
-    Desarrollado por <b>Francisco De Cilia</b><br>
-    &copy; 2026 Laboratorio Banda
-  </footer>
+    <footer>
+      Desarrollado por <b>Francisco De Cilia</b><br>
+      &copy; 2026 Laboratorio Banda
+    </footer>
 
-  <!-- 0. MODAL SCRIPT -->
-  <script>
-    window.pendingDocId = null;
-
-    window.openDeleteModal = function (docId) {
-      window.pendingDocId = docId;
-      const modal = document.getElementById("auth-modal");
-      const input = document.getElementById("admin-pass");
-      modal.style.display = "flex";
-      input.value = "";
-      input.focus();
-    }
-
-    window.closeModal = function () {
-      document.getElementById("auth-modal").style.display = "none";
+    <!-- 0. MODAL SCRIPT -->
+    <script>
       window.pendingDocId = null;
-    }
 
-    // --- SOUND SYSTEM ---
-    let soundEnabled = true;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      const btn = document.getElementById("btn-sound");
-      btn.innerText = soundEnabled ? "🔊 Sonido" : "🔇 Mudo";
-      btn.classList.toggle("active", soundEnabled);
-    }
-
-    function playBeep(freq, duration, type) {
-      if (!soundEnabled) return;
-      try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.frequency.value = freq;
-        osc.type = type || "sine";
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-      } catch (e) { console.log("Audio error", e); }
-    }
-
-    function playSuccess() {
-      playBeep(880, 0.15, "sine");
-      setTimeout(() => playBeep(1320, 0.2, "sine"), 150);
-      if (navigator.vibrate) navigator.vibrate(100);
-    }
-
-    function playError() {
-      playBeep(200, 0.3, "square");
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-    }
-
-    function playScan() {
-      playBeep(660, 0.1, "sine");
-      if (navigator.vibrate) navigator.vibrate(50);
-    }
-
-    // --- TOGGLE SECTIONS ---
-    function toggleErrorList() {
-      const body = document.getElementById("error-list-body");
-      const icon = document.getElementById("error-toggle-icon");
-      const visible = body.style.display !== "none";
-      body.style.display = visible ? "none" : "block";
-      icon.innerText = visible ? "▼" : "▲";
-    }
-
-    function toggleBreakdown() {
-      const body = document.getElementById("breakdown-body");
-      const icon = document.getElementById("breakdown-toggle-icon");
-      const visible = body.style.display !== "none";
-      body.style.display = visible ? "none" : "block";
-      icon.innerText = visible ? "▼" : "▲";
-    }
-
-    // --- EXPORT CSV ---
-    function exportCSV() {
-      const breakdownBody = document.getElementById("breakdown-body");
-      const items = breakdownBody.querySelectorAll(".breakdown-item");
-
-      if (items.length === 0) {
-        alert("No hay datos para exportar.");
-        return;
+      window.openDeleteModal = function (docId) {
+        window.pendingDocId = docId;
+        const modal = document.getElementById("auth-modal");
+        const input = document.getElementById("admin-pass");
+        modal.style.display = "flex";
+        input.value = "";
+        input.focus();
       }
 
-      let csv = "NAI,UB,Paciente\n";
-      items.forEach(item => {
-        const code = item.dataset.code || "";
-        const ub = item.dataset.ub || "0";
-        const paciente = item.dataset.paciente || "";
-        csv += `"${code}","${ub}","${paciente}"\n`;
-      });
+      window.closeModal = function () {
+        document.getElementById("auth-modal").style.display = "none";
+        window.pendingDocId = null;
+      }
 
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `ub_desglose_${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-  </script>
+      // --- SOUND SYSTEM ---
+      let soundEnabled = true;
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-  <!-- 1. SCRIPT DE BASE DE DATOS (FIREBASE) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDoc, setDoc, limit
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      function toggleSound() {
+        soundEnabled = !soundEnabled;
+        const btn = document.getElementById("btn-sound");
+        btn.innerText = soundEnabled ? "🔊 Sonido" : "🔇 Mudo";
+        btn.classList.toggle("active", soundEnabled);
+      }
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDjdlGGTm_bmTO9ETXIHe4VidA1k9my_nY",
-      authDomain: "code39-optimi.firebaseapp.com",
-      projectId: "code39-optimi",
-      storageBucket: "code39-optimi.firebasestorage.app",
-      messagingSenderId: "58310943950",
-      appId: "1:58310943950:web:0226916396780699365c9f"
-    };
+      function playBeep(freq, duration, type) {
+        if (!soundEnabled) return;
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.value = freq;
+          osc.type = type || "sine";
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (e) { console.log("Audio error", e); }
+      }
 
-    let db;
-    let CODES_COLLECTION = "codigos_barras";
+      function playSuccess() {
+        playBeep(880, 0.15, "sine");
+        setTimeout(() => playBeep(1320, 0.2, "sine"), 150);
+        if (navigator.vibrate) navigator.vibrate(100);
+      }
 
-    try {
-      const app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-      console.log("✅ Firebase inicializado correctamente");
+      function playError() {
+        playBeep(200, 0.3, "square");
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      }
 
-      startHistoryListener();
-      loadPersistedUB();
+      function playScan() {
+        playBeep(660, 0.1, "sine");
+        if (navigator.vibrate) navigator.vibrate(50);
+      }
 
-    } catch (e) {
-      console.error("❌ Error inicializando Firebase:", e);
-    }
+      // --- TOGGLE SECTIONS ---
+      function toggleErrorList() {
+        const body = document.getElementById("error-list-body");
+        const icon = document.getElementById("error-toggle-icon");
+        const visible = body.style.display !== "none";
+        body.style.display = visible ? "none" : "block";
+        icon.innerText = visible ? "▼" : "▲";
+      }
 
-    // --- LOAD PERSISTED UB ON PAGE LOAD ---
-    async function loadPersistedUB() {
-      try {
-        const allCodes = await window.getAllCodes();
-        let total = 0;
-        let processedCount = 0;
+      function toggleBreakdown() {
+        const body = document.getElementById("breakdown-body");
+        const icon = document.getElementById("breakdown-toggle-icon");
+        const visible = body.style.display !== "none";
+        body.style.display = visible ? "none" : "block";
+        icon.innerText = visible ? "▼" : "▲";
+      }
 
-        allCodes.forEach(c => {
-          if (c.ub_processed) {
-            total += parseFloat(c.ub_value || 0);
-            processedCount++;
-          }
+      // --- EXPORT CSV ---
+      function exportCSV() {
+        const breakdownBody = document.getElementById("breakdown-body");
+        const items = breakdownBody.querySelectorAll(".breakdown-item");
+
+        if (items.length === 0) {
+          alert("No hay datos para exportar.");
+          return;
+        }
+
+        let csv = "NAI,UB,Paciente\n";
+        items.forEach(item => {
+          const code = item.dataset.code || "";
+          const ub = item.dataset.ub || "0";
+          const paciente = item.dataset.paciente || "";
+          csv += `"${code}","${ub}","${paciente}"\n`;
         });
 
-        // Set global totalUB so the API script picks up from here
-        window._persistedTotalUB = total;
-        window._persistedCount = processedCount;
-
-        const ubDisplay = document.getElementById("ub-display");
-        const ubValue = document.getElementById("total-ub-value");
-        const ubDetail = document.getElementById("last-ub-detail");
-
-        if (processedCount > 0) {
-          ubDisplay.style.display = "block";
-          ubValue.innerText = total.toFixed(2);
-          ubDetail.style.display = "block";
-          ubDetail.innerText = `📦 ${processedCount} códigos cargados de Firebase`;
-          ubDetail.style.background = "rgba(255,255,255,0.2)";
-        }
-      } catch (e) {
-        console.error("Error cargando UB persistidas:", e);
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `ub_desglose_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
       }
-    }
+    </script>
 
-    // --- HISTORY LISTENER ---
-    function startHistoryListener() {
-      const historyList = document.getElementById("history-list");
-      if (!historyList) return;
+    <!-- 1. SCRIPT DE BASE DE DATOS (FIREBASE) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDoc, setDoc, limit
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-      const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"), limit(5));
+      const firebaseConfig = {
+        apiKey: "AIzaSyDjdlGGTm_bmTO9ETXIHe4VidA1k9my_nY",
+        authDomain: "code39-optimi.firebaseapp.com",
+        projectId: "code39-optimi",
+        storageBucket: "code39-optimi.firebasestorage.app",
+        messagingSenderId: "58310943950",
+        appId: "1:58310943950:web:0226916396780699365c9f"
+      };
 
-      onSnapshot(q, (snapshot) => {
-        historyList.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString() : "Reciente";
-          const ubBadge = data.ub_processed ? `<span style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>` : "";
+      let db;
+      let CODES_COLLECTION = "codigos_barras";
 
-          const item = document.createElement("li");
-          item.className = "history-item";
-          item.innerHTML = `
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        console.log("✅ Firebase inicializado correctamente");
+
+        startHistoryListener();
+        loadPersistedUB();
+
+      } catch (e) {
+        console.error("❌ Error inicializando Firebase:", e);
+      }
+
+      // --- LOAD PERSISTED UB ON PAGE LOAD ---
+      async function loadPersistedUB() {
+        try {
+          const allCodes = await window.getAllCodes();
+          let total = 0;
+          let processedCount = 0;
+
+          allCodes.forEach(c => {
+            if (c.ub_processed) {
+              total += parseFloat(c.ub_value || 0);
+              processedCount++;
+            }
+          });
+
+          // Set global totalUB so the API script picks up from here
+          window._persistedTotalUB = total;
+          window._persistedCount = processedCount;
+
+          const ubDisplay = document.getElementById("ub-display");
+          const ubValue = document.getElementById("total-ub-value");
+          const ubDetail = document.getElementById("last-ub-detail");
+
+          if (processedCount > 0) {
+            ubDisplay.style.display = "block";
+            ubValue.innerText = total.toFixed(2);
+            ubDetail.style.display = "block";
+            ubDetail.innerText = `📦 ${processedCount} códigos cargados de Firebase`;
+            ubDetail.style.background = "rgba(255,255,255,0.2)";
+          }
+        } catch (e) {
+          console.error("Error cargando UB persistidas:", e);
+        }
+      }
+
+      // --- HISTORY LISTENER ---
+      function startHistoryListener() {
+        const historyList = document.getElementById("history-list");
+        if (!historyList) return;
+
+        const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"), limit(5));
+
+        onSnapshot(q, (snapshot) => {
+          historyList.innerHTML = "";
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString() : "Reciente";
+            const ubBadge = data.ub_processed ? `<span style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>` : "";
+
+            const item = document.createElement("li");
+            item.className = "history-item";
+            item.innerHTML = `
             <div class="info">
               <strong>${data.code}${ubBadge}</strong>
               <span class="time">${date}</span>
             </div>
             <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
           `;
-          historyList.appendChild(item);
+            historyList.appendChild(item);
+          });
         });
-      });
-    }
-
-    window.deleteCode = function (docId) {
-      if (window.openDeleteModal) {
-        window.openDeleteModal(docId);
-      } else {
-        alert("Error: Modal no cargado");
-      }
-    }
-
-    window.confirmDelete = async function () {
-      const input = document.getElementById("admin-pass");
-      const password = input.value;
-
-      if (password !== "1234") {
-        alert("⛔ CLAVE INCORRECTA");
-        input.value = "";
-        input.focus();
-        return;
       }
 
-      const docId = window.pendingDocId;
-      if (!docId) return;
-
-      try {
-        await deleteDoc(doc(db, CODES_COLLECTION, docId));
-        if (window.closeModal) window.closeModal();
-
-        const resultDiv = document.getElementById("result");
-        resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
-
-        setTimeout(() => {
-          if (window.restartScanner) {
-            window.restartScanner();
-          } else {
-            resultDiv.innerHTML = "Esperando lectura...";
-          }
-        }, 1500);
-
-      } catch (e) {
-        console.error(e);
-        alert("Error al eliminar: " + e.message);
-      }
-    }
-
-    // Exponer función global para que la use el scanner
-    window.checkAndSaveCode = async function (code) {
-      const resultDiv = document.getElementById("result");
-
-      if (!db) {
-        resultDiv.innerHTML = "⚠️ Error: No hay conexión con la base de datos.";
-        return;
+      window.deleteCode = function (docId) {
+        if (window.openDeleteModal) {
+          window.openDeleteModal(docId);
+        } else {
+          alert("Error: Modal no cargado");
+        }
       }
 
-      resultDiv.innerHTML = `⏳ Verificando código <b>${code}</b>...`;
+      window.confirmDelete = async function () {
+        const input = document.getElementById("admin-pass");
+        const password = input.value;
 
-      try {
-        const codesRef = collection(db, CODES_COLLECTION);
-        const q = query(codesRef, where("code", "==", code));
-        const querySnapshot = await getDocs(q);
-
-        if (!querySnapshot.empty) {
-          playError();
-          resultDiv.innerHTML = `
-            <div style="color: #ff4444; font-weight: bold;">⛔ ERROR: DUPLICADO</div>
-            <div style="font-size: 0.8em; margin-top: 5px;">El código <b>${code}</b> ya existe.</div>
-            <button onclick="restartScanner()"
-              style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#444; color:white; cursor:pointer;">Escanear otro</button>
-          `;
+        if (password !== "1234") {
+          alert("⛔ CLAVE INCORRECTA");
+          input.value = "";
+          input.focus();
           return;
         }
 
-        // Guardar
-        await addDoc(codesRef, {
-          code: code,
-          timestamp: serverTimestamp(),
-          device: navigator.userAgent,
-          ub_processed: false,
-          ub_value: 0
-        });
+        const docId = window.pendingDocId;
+        if (!docId) return;
 
-        playScan();
+        try {
+          await deleteDoc(doc(db, CODES_COLLECTION, docId));
+          if (window.closeModal) window.closeModal();
 
-        resultDiv.innerHTML = `
-          <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO EXITOSAMENTE</div>
+          const resultDiv = document.getElementById("result");
+          resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
+
+          setTimeout(() => {
+            if (window.restartScanner) {
+              window.restartScanner();
+            } else {
+              resultDiv.innerHTML = "Esperando lectura...";
+            }
+          }, 1500);
+
+        } catch (e) {
+          console.error(e);
+          alert("Error al eliminar: " + e.message);
+        }
+      }
+
+      // --- QUEUE SYSTEM ---
+      const scanQueue = [];
+      let isQueueProcessing = false;
+
+      window.addToQueue = function (code) {
+        // Avoid duplicate pending items
+        if (scanQueue.includes(code)) return;
+
+        scanQueue.push(code);
+        updateQueueUI();
+        processQueue();
+      };
+
+      function updateQueueUI() {
+        const resultDiv = document.getElementById("result");
+        if (scanQueue.length > 0) {
+          // Show queue status if not showing a success/error result yet or if idle
+          const qStatus = document.getElementById("queue-status");
+          if (!qStatus) {
+            const status = document.createElement("div");
+            status.id = "queue-status";
+            status.style.fontSize = "10px";
+            status.style.color = "#888";
+            status.style.marginTop = "5px";
+            resultDiv.appendChild(status);
+          }
+          document.getElementById("queue-status").innerText = `En cola: ${scanQueue.length}`;
+        }
+      }
+
+      async function processQueue() {
+        if (isQueueProcessing) return;
+        if (scanQueue.length === 0) return;
+
+        isQueueProcessing = true;
+        const code = scanQueue.shift(); // FIFO
+        updateQueueUI();
+
+        await processSingleCode(code);
+
+        isQueueProcessing = false;
+        // Loop
+        processQueue();
+      }
+
+      // Renamed from checkAndSaveCode -> logic extracted
+      async function processSingleCode(code) {
+        const resultDiv = document.getElementById("result");
+
+        if (!db) {
+          resultDiv.innerHTML = "⚠️ Error: No hay conexión con la base de datos.";
+          return;
+        }
+
+        // Reset UI for this item
+        resultDiv.innerHTML = `⏳ Procesando <b>${code}</b>...`;
+
+        try {
+          const codesRef = collection(db, CODES_COLLECTION);
+          const q = query(codesRef, where("code", "==", code));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            playError();
+            resultDiv.innerHTML = `
+            <div style="color: #ff4444; font-weight: bold;">⛔ ERROR: DUPLICADO</div>
+            <div style="font-size: 0.8em; margin-top: 5px;">El código <b>${code}</b> ya existe.</div>
+            <div style="font-size: 0.7em; color:#ccc; margin-top:5px;">Siguiente en ${scanQueue.length}...</div>
+          `;
+            await sleep(1500); // Show error briefly
+            return;
+          }
+
+          // Guardar
+          await addDoc(codesRef, {
+            code: code,
+            timestamp: serverTimestamp(),
+            device: navigator.userAgent,
+            ub_processed: false,
+            ub_value: 0
+          });
+
+          playScan();
+
+          resultDiv.innerHTML = `
+          <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO</div>
           <div style="font-size: 0.8em; margin-top: 5px;">Código: <b>${code}</b></div>
-          <button onclick="restartScanner()"
-            style="margin-top:15px; padding:10px 20px; border:none; border-radius:5px; background:#00ff99; color:black; font-weight:bold; cursor:pointer;">Siguiente ▶</button>
         `;
 
-        // API INTEGRATION CALL
-        if (window.processUbApi) {
-          window.processUbApi(code).then(apiResult => {
+          // API API CHECK (Only if logged in check will be added later, for now keep logic)
+          // We act conditionally based on window.processUbApi presence which implies loaded
+          if (window.processUbApi) {
+            // Optional: visual cue we are checking API
+            const apiCue = document.createElement("div");
+            apiCue.innerText = "Busando UB...";
+            apiCue.style.fontSize = "10px";
+            resultDiv.appendChild(apiCue);
+
+            const apiResult = await window.processUbApi(code);
+
             if (apiResult && apiResult.found) {
               playSuccess();
-              const extraMsg = document.createElement("div");
-              extraMsg.style.cssText = "margin-top:10px; font-size:12px; color:#fff; background:#9e2a2b; padding:5px; border-radius:4px;";
-              extraMsg.innerHTML = `💰 UB Agregadas: <b>${apiResult.total_ub.toFixed(2)}</b>`;
-              resultDiv.appendChild(extraMsg);
+              resultDiv.innerHTML = `
+                  <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO + UB</div>
+                  <div style="font-size: 0.8em; margin-top: 5px;">${code}</div>
+                  <div style="margin-top:5px; font-size:12px; color:#fff; background:#9e2a2b; padding:5px; border-radius:4px;">
+                    💰 ${apiResult.total_ub.toFixed(2)} UB
+                  </div>
+                `;
 
-              // Persist UB in Firebase for this code
               if (window.markCodeProcessed) {
                 window.markCodeProcessed(code, apiResult.total_ub, apiResult.paciente || "");
               }
             }
-          });
+          }
+
+          await sleep(1000); // Brief pause to see result before next
+
+        } catch (error) {
+          console.error("Error Processing:", error);
+          resultDiv.innerHTML = `❌ Error: ${error.message}`;
+          await sleep(2000);
         }
-
-      } catch (error) {
-        console.error("Error Firebase:", error);
-        resultDiv.innerHTML = `❌ Error guardando: ${error.message}`;
       }
-    };
 
-    // Obtener todos los códigos (DEDUP por NAI)
-    window.getAllCodes = async function () {
-      if (!db) return [];
-      try {
-        const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"));
-        const snapshot = await getDocs(q);
-        const codeMap = new Map();
+      // Alias for compatibility
+      window.checkAndSaveCode = window.addToQueue;
 
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const code = data.code;
+      // Obtener todos los códigos (DEDUP por NAI)
+      window.getAllCodes = async function () {
+        if (!db) return [];
+        try {
+          const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"));
+          const snapshot = await getDocs(q);
+          const codeMap = new Map();
 
-          // Si el código ya está, y el nuevo NO está procesado, ignorar.
-          // Si el que tenemos NO está procesado pero el nuevo SI, reemplazar.
-          if (codeMap.has(code)) {
-            const existing = codeMap.get(code);
-            if (!existing.ub_processed && data.ub_processed) {
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const code = data.code;
+
+            // Si el código ya está, y el nuevo NO está procesado, ignorar.
+            // Si el que tenemos NO está procesado pero el nuevo SI, reemplazar.
+            if (codeMap.has(code)) {
+              const existing = codeMap.get(code);
+              if (!existing.ub_processed && data.ub_processed) {
+                codeMap.set(code, {
+                  id: docSnap.id,
+                  code: code,
+                  ub_processed: true,
+                  ub_value: data.ub_value || 0
+                });
+              }
+            } else {
               codeMap.set(code, {
                 id: docSnap.id,
                 code: code,
-                ub_processed: true,
+                ub_processed: data.ub_processed || false,
                 ub_value: data.ub_value || 0
               });
             }
-          } else {
-            codeMap.set(code, {
-              id: docSnap.id,
-              code: code,
-              ub_processed: data.ub_processed || false,
-              ub_value: data.ub_value || 0
-            });
-          }
-        });
-        return Array.from(codeMap.values());
-      } catch (e) {
-        console.error("Error obteniendo códigos:", e);
-        return [];
-      }
-    };
-
-    // Marcar código como procesado con su valor UB
-    window.markCodeProcessed = async function (code, ubVal, paciente) {
-      if (!db) return;
-      try {
-        const q = query(collection(db, CODES_COLLECTION), where("code", "==", code));
-        const snapshot = await getDocs(q);
-        snapshot.forEach(async (docSnap) => {
-          await updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
-            ub_processed: true,
-            ub_value: ubVal,
-            ub_paciente: paciente || ""
           });
+          return Array.from(codeMap.values());
+        } catch (e) {
+          console.error("Error obteniendo códigos:", e);
+          return [];
+        }
+      };
+
+      // Marcar código como procesado con su valor UB
+      window.markCodeProcessed = async function (code, ubVal, paciente) {
+        if (!db) return;
+        try {
+          const q = query(collection(db, CODES_COLLECTION), where("code", "==", code));
+          const snapshot = await getDocs(q);
+          snapshot.forEach(async (docSnap) => {
+            await updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
+              ub_processed: true,
+              ub_value: ubVal,
+              ub_paciente: paciente || ""
+            });
+          });
+        } catch (e) {
+          console.error("Error marcando código procesado:", e);
+        }
+      };
+    </script>
+
+    <!-- 1.5 SCRIPT API UBS INTEGRATION -->
+    <script>
+      const PROXY1 = "https://corsproxy.io/?";
+      const PROXY2 = "https://api.allorigins.win/get?url=";
+      const TARGET_API = "https://api-ubs-production.up.railway.app";
+      const API_USER = "RRSSRL";
+      const API_PASS = "30717143503";
+
+      function apiLog(msg) {
+        console.log("[API DEBUG]", msg);
+        const logArea = document.getElementById("api-debug-log");
+        logArea.style.display = "block";
+        const time = new Date().toLocaleTimeString();
+        logArea.innerHTML += `<div>[${time}] ${msg}</div>`;
+        logArea.scrollTop = logArea.scrollHeight;
+      }
+
+      function getApiUrl(endpoint) {
+        const mode = document.getElementById("sel-api-channel").value;
+        const target = `${TARGET_API}${endpoint}`;
+
+        if (mode === "direct") return target;
+        if (mode === "proxy2") return PROXY2 + encodeURIComponent(target);
+        return PROXY1 + encodeURIComponent(target);
+      }
+
+      let apiSessionActive = false;
+      let totalUB = window._persistedTotalUB || 0.0;
+
+      // UI Elements
+      const btnConnect = document.getElementById("btn-connect");
+      const btnText = document.getElementById("btn-connect-text");
+      const statusInd = document.getElementById("api-status-indicator");
+      const ubDisplay = document.getElementById("ub-display");
+      const ubValue = document.getElementById("total-ub-value");
+      const ubDetail = document.getElementById("last-ub-detail");
+      const progressContainer = document.getElementById("progress-container");
+      const progressBar = document.getElementById("progress-bar");
+      const toolbar = document.getElementById("toolbar");
+      const errorListContainer = document.getElementById("error-list-container");
+      const errorListBody = document.getElementById("error-list-body");
+      const errorCount = document.getElementById("error-count");
+      const breakdownContainer = document.getElementById("breakdown-container");
+      const breakdownBody = document.getElementById("breakdown-body");
+      const breakdownCount = document.getElementById("breakdown-count");
+
+      // --- DIRECT MODE SYNC ---
+      const chkDirect = document.getElementById("chk-direct-mode");
+      const selChannel = document.getElementById("sel-api-channel");
+
+      if (chkDirect && selChannel) {
+        chkDirect.addEventListener("change", (e) => {
+          selChannel.value = e.target.checked ? "direct" : "proxy1";
         });
-      } catch (e) {
-        console.error("Error marcando código procesado:", e);
-      }
-    };
-  </script>
 
-  <!-- 1.5 SCRIPT API UBS INTEGRATION -->
-  <script>
-    const PROXY1 = "https://corsproxy.io/?";
-    const PROXY2 = "https://api.allorigins.win/get?url=";
-    const TARGET_API = "https://api-ubs-production.up.railway.app";
-    const API_USER = "RRSSRL";
-    const API_PASS = "30717143503";
-
-    function apiLog(msg) {
-      console.log("[API DEBUG]", msg);
-      const logArea = document.getElementById("api-debug-log");
-      logArea.style.display = "block";
-      const time = new Date().toLocaleTimeString();
-      logArea.innerHTML += `<div>[${time}] ${msg}</div>`;
-      logArea.scrollTop = logArea.scrollHeight;
-    }
-
-    function getApiUrl(endpoint) {
-      const mode = document.getElementById("sel-api-channel").value;
-      const target = `${TARGET_API}${endpoint}`;
-
-      if (mode === "direct") return target;
-      if (mode === "proxy2") return PROXY2 + encodeURIComponent(target);
-      return PROXY1 + encodeURIComponent(target);
-    }
-
-    let apiSessionActive = false;
-    let totalUB = window._persistedTotalUB || 0.0;
-
-    // UI Elements
-    const btnConnect = document.getElementById("btn-connect");
-    const btnText = document.getElementById("btn-connect-text");
-    const statusInd = document.getElementById("api-status-indicator");
-    const ubDisplay = document.getElementById("ub-display");
-    const ubValue = document.getElementById("total-ub-value");
-    const ubDetail = document.getElementById("last-ub-detail");
-    const progressContainer = document.getElementById("progress-container");
-    const progressBar = document.getElementById("progress-bar");
-    const toolbar = document.getElementById("toolbar");
-    const errorListContainer = document.getElementById("error-list-container");
-    const errorListBody = document.getElementById("error-list-body");
-    const errorCount = document.getElementById("error-count");
-    const breakdownContainer = document.getElementById("breakdown-container");
-    const breakdownBody = document.getElementById("breakdown-body");
-    const breakdownCount = document.getElementById("breakdown-count");
-
-    // --- DIRECT MODE SYNC ---
-    const chkDirect = document.getElementById("chk-direct-mode");
-    const selChannel = document.getElementById("sel-api-channel");
-
-    if (chkDirect && selChannel) {
-      chkDirect.addEventListener("change", (e) => {
-        selChannel.value = e.target.checked ? "direct" : "proxy1";
-      });
-
-      selChannel.addEventListener("change", (e) => {
-        chkDirect.checked = (e.target.value === "direct");
-      });
-    }
-
-    // Initialize from persisted (with deduplication safety)
-    if (window._persistedTotalUB) {
-      totalUB = window._persistedTotalUB;
-      ubValue.innerText = totalUB.toFixed(2);
-    }
-
-    function updateApiUI(state) {
-      if (state === "connecting") {
-        btnConnect.style.background = "#ccc";
-        btnText.innerText = "Conectando...";
-        btnConnect.disabled = true;
-        document.getElementById("btn-reset-session").style.display = "none";
-      } else if (state === "connected") {
-        apiSessionActive = true;
-        btnConnect.style.background = "#444";
-        btnText.innerText = "Desconectar";
-        btnConnect.disabled = false;
-        statusInd.innerHTML = "🟢 Conectado";
-        statusInd.style.color = "#28a745";
-        ubDisplay.style.display = "block";
-        toolbar.style.display = "flex";
-        document.getElementById("btn-reset-session").style.display = "inline-flex";
-      } else if (state === "disconnected") {
-        apiSessionActive = false;
-        btnConnect.style.background = "#9e2a2b";
-        btnText.innerText = "Conectar";
-        btnConnect.disabled = false;
-        statusInd.innerHTML = "🔴 Desconectado";
-        statusInd.style.color = "#999";
-        progressContainer.style.display = "none";
-        document.getElementById("btn-reset-session").style.display = "none";
-      }
-    }
-
-    async function forceResetSession() {
-      if (!confirm("¿Deseas resetear la sesión API? Útil si aparecen errores 400 constantes.")) return;
-      apiSessionActive = true; // Pretend it's active to trigger stop
-      await toggleApiSession(); // Stop
-      await toggleApiSession(); // Start again
-    }
-
-    function updateProgress(current, total) {
-      progressContainer.style.display = "block";
-      const pct = total > 0 ? (current / total * 100) : 0;
-      progressBar.style.width = pct + "%";
-    }
-
-    // Track failed NAI codes for retry
-    let failedNAIs = [];
-
-    function addErrorToList(code, reason) {
-      errorListContainer.style.display = "block";
-      // Avoid duplicates in the array
-      if (!failedNAIs.includes(code)) {
-        failedNAIs.push(code);
+        selChannel.addEventListener("change", (e) => {
+          chkDirect.checked = (e.target.value === "direct");
+        });
       }
 
-      // Update existing UI item or create new one
-      let item = errorListBody.querySelector(`.error-item[data-code="${code}"]`);
-      if (!item) {
-        item = document.createElement("div");
-        item.className = "error-item";
-        item.dataset.code = code;
-        errorListBody.appendChild(item);
+      // Initialize from persisted (with deduplication safety)
+      if (window._persistedTotalUB) {
+        totalUB = window._persistedTotalUB;
+        ubValue.innerText = totalUB.toFixed(2);
       }
 
-      let reasonStr = "";
-      if (typeof reason === "object" && reason !== null) {
-        reasonStr = reason.message || reason.error || JSON.stringify(reason);
-      } else {
-        reasonStr = String(reason || "");
+      function updateApiUI(state) {
+        if (state === "connecting") {
+          btnConnect.style.background = "#ccc";
+          btnText.innerText = "Conectando...";
+          btnConnect.disabled = true;
+          document.getElementById("btn-reset-session").style.display = "none";
+        } else if (state === "connected") {
+          apiSessionActive = true;
+          btnConnect.style.background = "#444";
+          btnText.innerText = "Desconectar";
+          btnConnect.disabled = false;
+          statusInd.innerHTML = "🟢 Conectado";
+          statusInd.style.color = "#28a745";
+          ubDisplay.style.display = "block";
+          toolbar.style.display = "flex";
+          document.getElementById("btn-reset-session").style.display = "inline-flex";
+        } else if (state === "disconnected") {
+          apiSessionActive = false;
+          btnConnect.style.background = "#9e2a2b";
+          btnText.innerText = "Conectar";
+          btnConnect.disabled = false;
+          statusInd.innerHTML = "🔴 Desconectado";
+          statusInd.style.color = "#999";
+          progressContainer.style.display = "none";
+          document.getElementById("btn-reset-session").style.display = "none";
+        }
       }
-      const isTimeout = reasonStr.toLowerCase().includes("timeout") || reasonStr.includes("504") || reasonStr.includes("502");
-      const displayReason = isTimeout ? "⚠️ Posible Timeout de Proxy (30s+)" : reasonStr;
 
-      item.innerHTML = `
+      async function forceResetSession() {
+        if (!confirm("¿Deseas resetear la sesión API? Útil si aparecen errores 400 constantes.")) return;
+        apiSessionActive = true; // Pretend it's active to trigger stop
+        await toggleApiSession(); // Stop
+        await toggleApiSession(); // Start again
+      }
+
+      function updateProgress(current, total) {
+        progressContainer.style.display = "block";
+        const pct = total > 0 ? (current / total * 100) : 0;
+        progressBar.style.width = pct + "%";
+      }
+
+      // Track failed NAI codes for retry
+      let failedNAIs = [];
+
+      function addErrorToList(code, reason) {
+        errorListContainer.style.display = "block";
+        // Avoid duplicates in the array
+        if (!failedNAIs.includes(code)) {
+          failedNAIs.push(code);
+        }
+
+        // Update existing UI item or create new one
+        let item = errorListBody.querySelector(`.error-item[data-code="${code}"]`);
+        if (!item) {
+          item = document.createElement("div");
+          item.className = "error-item";
+          item.dataset.code = code;
+          errorListBody.appendChild(item);
+        }
+
+        let reasonStr = "";
+        if (typeof reason === "object" && reason !== null) {
+          reasonStr = reason.message || reason.error || JSON.stringify(reason);
+        } else {
+          reasonStr = String(reason || "");
+        }
+        const isTimeout = reasonStr.toLowerCase().includes("timeout") || reasonStr.includes("504") || reasonStr.includes("502");
+        const displayReason = isTimeout ? "⚠️ Posible Timeout de Proxy (30s+)" : reasonStr;
+
+        item.innerHTML = `
         <span class="error-code">${code}</span>
         <span class="error-msg">${displayReason}</span>
       `;
 
-      const count = errorListBody.querySelectorAll(".error-item").length;
-      errorCount.innerText = count;
-    }
+        const count = errorListBody.querySelectorAll(".error-item").length;
+        errorCount.innerText = count;
+      }
 
-    function removeErrorFromList(code) {
-      const items = errorListBody.querySelectorAll(".error-item");
-      items.forEach(item => {
-        if (item.dataset.code === code) {
-          item.remove();
+      function removeErrorFromList(code) {
+        const items = errorListBody.querySelectorAll(".error-item");
+        items.forEach(item => {
+          if (item.dataset.code === code) {
+            item.remove();
+          }
+        });
+        failedNAIs = failedNAIs.filter(c => c !== code);
+        const count = errorListBody.querySelectorAll(".error-item").length;
+        errorCount.innerText = count;
+        if (count === 0) {
+          errorListContainer.style.display = "none";
         }
-      });
-      failedNAIs = failedNAIs.filter(c => c !== code);
-      const count = errorListBody.querySelectorAll(".error-item").length;
-      errorCount.innerText = count;
-      if (count === 0) {
-        errorListContainer.style.display = "none";
-      }
-    }
-
-    async function retryFailedNAIs() {
-      if (!apiSessionActive) {
-        alert("Primero conectá la API.");
-        return;
-      }
-      if (failedNAIs.length === 0) {
-        alert("No hay NAIs con error para reintentar.");
-        return;
       }
 
-      const codesToRetry = [...failedNAIs]; // Copy
-      const btnRetry = document.getElementById("btn-retry");
-      btnRetry.disabled = true;
-      btnRetry.innerHTML = "⏳ Esperando...";
+      async function retryFailedNAIs() {
+        if (!apiSessionActive) {
+          alert("Primero conectá la API.");
+          return;
+        }
+        if (failedNAIs.length === 0) {
+          alert("No hay NAIs con error para reintentar.");
+          return;
+        }
 
-      ubDetail.style.display = "block";
-      let retried = 0;
-      let fixed = 0;
+        const codesToRetry = [...failedNAIs]; // Copy
+        const btnRetry = document.getElementById("btn-retry");
+        btnRetry.disabled = true;
+        btnRetry.innerHTML = "⏳ Esperando...";
 
-      for (const code of codesToRetry) {
-        retried++;
-        ubDetail.innerText = `🔄 Reintentando ${retried}/${codesToRetry.length}...`;
-        btnRetry.innerHTML = `⏳ ${retried}/${codesToRetry.length}`;
-        updateProgress(retried, codesToRetry.length);
+        ubDetail.style.display = "block";
+        let retried = 0;
+        let fixed = 0;
 
-        // Delay to prevent overwhelming the proxy
-        await sleep(2000);
+        for (const code of codesToRetry) {
+          retried++;
+          ubDetail.innerText = `🔄 Reintentando ${retried}/${codesToRetry.length}...`;
+          btnRetry.innerHTML = `⏳ ${retried}/${codesToRetry.length}`;
+          updateProgress(retried, codesToRetry.length);
 
-        try {
-          const res = await fetch(getApiUrl("/process-nai"), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nai: code })
-          });
+          // Delay to prevent overwhelming the proxy
+          await sleep(2000);
 
-          const resClone = res.clone();
-          let data;
           try {
-            data = await res.json();
-            const mode = document.getElementById("sel-api-channel").value;
-            if (mode === "proxy2" && data.contents) {
-              data = JSON.parse(data.contents);
-            }
-          } catch (e) {
-            const text = await resClone.text().catch(() => "Cuerpo inaccesible");
-            apiLog(`Falla JSON ${code}: ${text.substring(0, 30)}`);
-            addErrorToList(code, `Error HTTP ${res.status}: ${text.substring(0, 50)}`);
-            continue;
-          }
-
-          apiLog(`Respuesta ${code}: ${data.status || "OK"}`);
-          console.log(`Reintento para ${code}:`, data);
-
-          if (!res.ok) {
-            const errorMsg = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
-            addErrorToList(code, errorMsg);
-            continue;
-          }
-
-          if (data.recetas && data.recetas.length > 0) {
-            let naiTotal = 0;
-            let paciente = data.recetas[0].paciente || "Paciente Desconocido";
-            data.recetas.forEach(r => {
-              naiTotal += parseFloat(r.total_ub || 0);
+            const res = await fetch(getApiUrl("/process-nai"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nai: code })
             });
 
-            totalUB += naiTotal;
-            ubValue.innerText = totalUB.toFixed(2);
-
-            if (window.markCodeProcessed) {
-              window.markCodeProcessed(code, naiTotal, paciente);
+            const resClone = res.clone();
+            let data;
+            try {
+              data = await res.json();
+              const mode = document.getElementById("sel-api-channel").value;
+              if (mode === "proxy2" && data.contents) {
+                data = JSON.parse(data.contents);
+              }
+            } catch (e) {
+              const text = await resClone.text().catch(() => "Cuerpo inaccesible");
+              apiLog(`Falla JSON ${code}: ${text.substring(0, 30)}`);
+              addErrorToList(code, `Error HTTP ${res.status}: ${text.substring(0, 50)}`);
+              continue;
             }
 
-            addBreakdownItem(code, naiTotal, paciente);
-            removeErrorFromList(code);
-            fixed++;
-          } else {
-            addErrorToList(code, data.status || "Sin datos");
+            apiLog(`Respuesta ${code}: ${data.status || "OK"}`);
+            console.log(`Reintento para ${code}:`, data);
+
+            if (!res.ok) {
+              const errorMsg = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
+              addErrorToList(code, errorMsg);
+              continue;
+            }
+
+            if (data.recetas && data.recetas.length > 0) {
+              let naiTotal = 0;
+              let paciente = data.recetas[0].paciente || "Paciente Desconocido";
+              data.recetas.forEach(r => {
+                naiTotal += parseFloat(r.total_ub || 0);
+              });
+
+              totalUB += naiTotal;
+              ubValue.innerText = totalUB.toFixed(2);
+
+              if (window.markCodeProcessed) {
+                window.markCodeProcessed(code, naiTotal, paciente);
+              }
+
+              addBreakdownItem(code, naiTotal, paciente);
+              removeErrorFromList(code);
+              fixed++;
+            } else {
+              addErrorToList(code, data.status || "Sin datos");
+            }
+          } catch (e) {
+            console.error(`Retry error ${code}:`, e);
+            addErrorToList(code, "Error de Red/Proxy");
           }
-        } catch (e) {
-          console.error(`Retry error ${code}:`, e);
-          addErrorToList(code, "Error de Red/Proxy");
         }
+
+        progressContainer.style.display = "none";
+        btnRetry.disabled = false;
+        btnRetry.innerHTML = "🔄 Reintentar";
+
+        if (fixed > 0) {
+          playSuccess();
+          ubDetail.innerText = `✔ ${fixed}/${codesToRetry.length} recuperados en reintento`;
+        } else {
+          playError();
+          ubDetail.innerText = `⚠️ Ninguno recuperado en reintento`;
+        }
+        ubDetail.style.background = "rgba(255,255,255,0.3)";
       }
 
-      progressContainer.style.display = "none";
-      btnRetry.disabled = false;
-      btnRetry.innerHTML = "🔄 Reintentar";
-
-      if (fixed > 0) {
-        playSuccess();
-        ubDetail.innerText = `✔ ${fixed}/${codesToRetry.length} recuperados en reintento`;
-      } else {
-        playError();
-        ubDetail.innerText = `⚠️ Ninguno recuperado en reintento`;
-      }
-      ubDetail.style.background = "rgba(255,255,255,0.3)";
-    }
-
-    function addBreakdownItem(code, ub, paciente) {
-      breakdownContainer.style.display = "block";
-      const item = document.createElement("div");
-      item.className = "breakdown-item";
-      item.dataset.code = code;
-      item.dataset.ub = ub.toFixed(2);
-      item.dataset.paciente = paciente;
-      item.innerHTML = `
+      function addBreakdownItem(code, ub, paciente) {
+        breakdownContainer.style.display = "block";
+        const item = document.createElement("div");
+        item.className = "breakdown-item";
+        item.dataset.code = code;
+        item.dataset.ub = ub.toFixed(2);
+        item.dataset.paciente = paciente;
+        item.innerHTML = `
         <div>
           <div style="font-weight:bold; font-size:14px;">${code}</div>
           <div style="font-size:11px; color:#888;">${paciente}</div>
         </div>
         <span class="ub-val">+${ub.toFixed(2)} UB</span>
       `;
-      breakdownBody.appendChild(item);
-      const count = breakdownBody.querySelectorAll(".breakdown-item").length;
-      breakdownCount.innerText = count;
-    }
+        breakdownBody.appendChild(item);
+        const count = breakdownBody.querySelectorAll(".breakdown-item").length;
+        breakdownCount.innerText = count;
+      }
 
 
-    async function toggleApiSession() {
-      if (apiSessionActive) {
-        try {
-          const finalUrl = getApiUrl("/stop-session");
-          fetch(finalUrl, { method: "POST" }).catch(e => console.warn("Error stopping session", e));
-        } catch (e) {
-          console.error(e);
-        } finally {
-          updateApiUI("disconnected");
+      async function toggleApiSession() {
+        if (apiSessionActive) {
+          try {
+            const finalUrl = getApiUrl("/stop-session");
+            fetch(finalUrl, { method: "POST" }).catch(e => console.warn("Error stopping session", e));
+          } catch (e) {
+            console.error(e);
+          } finally {
+            updateApiUI("disconnected");
+          }
+        } else {
+          updateApiUI("connecting");
+          try {
+            const today = new Date();
+            const startYear = today.getFullYear();
+
+            const payload = {
+              user: API_USER,
+              password: API_PASS,
+              fecha_desde: `01/01/${startYear}`,
+              fecha_hasta: `31/12/${startYear}`,
+              headless: true
+            };
+
+            const finalUrl = getApiUrl("/start-session");
+
+            const res = await fetch(finalUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+              const text = await res.text().catch(() => "Sin detalle");
+              throw new Error(`Error ${res.status}: ${text.substring(0, 40)}`);
+            }
+
+            let data = await res.json();
+            const mode = document.getElementById("sel-api-channel").value;
+            if (mode === "proxy2" && data.contents) {
+              data = JSON.parse(data.contents);
+            }
+
+            apiLog("Login OK: " + (data.status || "Iniciado"));
+            updateApiUI("connected");
+
+            // Process unprocessed codes
+            await processExistingCodes();
+
+          } catch (e) {
+            apiLog("Falla fatal: " + e.message);
+            let msg = e.message;
+            if (msg === "Failed to fetch" || msg.includes("fetch")) {
+              const mode = document.getElementById("sel-api-channel").value;
+              if (mode === "direct") {
+                msg = "Error de Red (Failed to fetch). Probablemente Chrome bloquea el pedido. Asegurate de tener activado el switch en la extensión CORS.";
+              } else {
+                msg = "Error de Red / Timeout. Los proxies gratuitos cortan a los 30 segundos. Si este NAI es lento, intentá con Modo Directo.";
+              }
+            }
+            alert("Error conectando a la API: " + msg);
+            updateApiUI("disconnected");
+          }
         }
-      } else {
-        updateApiUI("connecting");
+      }
+
+      // --- Process existing codes (only unprocessed ones) ---
+      async function processExistingCodes() {
+        if (!window.getAllCodes) {
+          console.warn("getAllCodes no disponible aún");
+          return;
+        }
+
+        ubDetail.style.display = "block";
+        ubDetail.innerText = "⏳ Cargando códigos...";
+
+        // Clear previous error/breakdown lists
+        errorListBody.innerHTML = "";
+        errorCount.innerText = "0";
+        errorListContainer.style.display = "none";
+        breakdownBody.innerHTML = "";
+        breakdownCount.innerText = "0";
+        breakdownContainer.style.display = "none";
+
+        const allCodes = await window.getAllCodes();
+
+        // Recalcular totalUB inicial desde el DB deduplicado para evitar saltos o duplicados
+        totalUB = 0;
+        const unprocessed = [];
+        const alreadyProcessedCodes = [];
+
+        allCodes.forEach(c => {
+          if (c.ub_processed) {
+            totalUB += parseFloat(c.ub_value || 0);
+            alreadyProcessedCodes.push(c);
+          } else {
+            unprocessed.push(c);
+          }
+        });
+
+        // Actualizar UI con el total real deducido
+        ubValue.innerText = totalUB.toFixed(2);
+        alreadyProcessedCodes.forEach(c => {
+          if (parseFloat(c.ub_value) > 0) {
+            addBreakdownItem(c.code, c.ub_value, "");
+          }
+        });
+
+        if (unprocessed.length === 0) {
+          ubDetail.innerText = `✔ Todo procesado (${allCodes.length} únicos)`;
+          progressContainer.style.display = "none";
+          return;
+        }
+
+        ubDetail.innerText = `⏳ Procesando 0/${unprocessed.length} NAIs únicos pendientes...`;
+
+        let processed = 0;
+
+        for (const codeObj of unprocessed) {
+          updateProgress(processed, unprocessed.length);
+
+          // Delay between requests
+          await sleep(1500);
+
+          try {
+            const res = await fetch(getApiUrl("/process-nai"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nai: codeObj.code })
+            });
+
+            const resClone = res.clone();
+            let data;
+            try {
+              data = await res.json();
+              const mode = document.getElementById("sel-api-channel").value;
+              if (mode === "proxy2" && data.contents) {
+                data = JSON.parse(data.contents);
+              }
+            } catch (e) {
+              const text = await resClone.text().catch(() => "Cuerpo inaccesible");
+              apiLog(`Falla JSON ${codeObj.code}: ${text.substring(0, 30)}`);
+              addErrorToList(codeObj.code, `Err ${res.status}: ${text.substring(0, 50)}`);
+              processed++;
+              continue;
+            }
+
+            apiLog(`Respuesta ${codeObj.code}: ${data.status || "OK"}`);
+            console.log(`Respuesta API para ${codeObj.code}:`, data);
+
+            if (!res.ok) {
+              const errorMsg = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
+              addErrorToList(codeObj.code, errorMsg);
+              processed++;
+              continue;
+            }
+
+            if (data.recetas && data.recetas.length > 0) {
+              let naiTotal = 0;
+              let paciente = data.recetas[0].paciente || "Paciente Desconocido";
+              data.recetas.forEach(r => {
+                naiTotal += parseFloat(r.total_ub || 0);
+              });
+
+              totalUB += naiTotal;
+              ubValue.innerText = totalUB.toFixed(2);
+
+              if (window.markCodeProcessed) {
+                window.markCodeProcessed(codeObj.code, naiTotal, paciente);
+              }
+
+              addBreakdownItem(codeObj.code, naiTotal, paciente);
+            } else {
+              const reason = data.status || data.error || "Sin datos";
+              addErrorToList(codeObj.code, reason);
+            }
+          } catch (e) {
+            console.error(`Error procesando ${codeObj.code}:`, e);
+            addErrorToList(codeObj.code, e.message || "Error de red");
+          }
+
+          processed++;
+          ubDetail.innerText = `⏳ Procesando ${processed}/${unprocessed.length} pendientes...`;
+          updateProgress(processed, unprocessed.length);
+        }
+
+        // Done
+        const errCount = errorListBody.querySelectorAll(".error-item").length;
+        if (errCount > 0) {
+          ubDetail.innerText = `✔ ${processed - errCount} procesados, ${errCount} errores`;
+          playError();
+        } else {
+          ubDetail.innerText = `✔ ${unprocessed.length} códigos procesados`;
+          playSuccess();
+        }
+        ubDetail.style.background = "rgba(255,255,255,0.3)";
+        progressContainer.style.display = "none";
+      }
+
+      async function processUbApi(nai) {
+        if (!apiSessionActive) return null;
+
         try {
-          const today = new Date();
-          const startYear = today.getFullYear();
+          ubDetail.style.display = "block";
+          ubDetail.innerText = "⏳ Buscando en API...";
 
-          const payload = {
-            user: API_USER,
-            password: API_PASS,
-            fecha_desde: `01/01/${startYear}`,
-            fecha_hasta: `31/12/${startYear}`,
-            headless: true
-          };
-
-          const finalUrl = getApiUrl("/start-session");
+          const finalUrl = getApiUrl("/process-nai");
 
           const res = await fetch(finalUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ nai: nai })
           });
 
-          if (!res.ok) {
-            const text = await res.text().catch(() => "Sin detalle");
-            throw new Error(`Error ${res.status}: ${text.substring(0, 40)}`);
-          }
-
-          let data = await res.json();
-          const mode = document.getElementById("sel-api-channel").value;
-          if (mode === "proxy2" && data.contents) {
-            data = JSON.parse(data.contents);
-          }
-
-          apiLog("Login OK: " + (data.status || "Iniciado"));
-          updateApiUI("connected");
-
-          // Process unprocessed codes
-          await processExistingCodes();
-
-        } catch (e) {
-          apiLog("Falla fatal: " + e.message);
-          let msg = e.message;
-          if (msg === "Failed to fetch" || msg.includes("fetch")) {
-            const mode = document.getElementById("sel-api-channel").value;
-            if (mode === "direct") {
-              msg = "Error de Red (Failed to fetch). Probablemente Chrome bloquea el pedido. Asegurate de tener activado el switch en la extensión CORS.";
-            } else {
-              msg = "Error de Red / Timeout. Los proxies gratuitos cortan a los 30 segundos. Si este NAI es lento, intentá con Modo Directo.";
-            }
-          }
-          alert("Error conectando a la API: " + msg);
-          updateApiUI("disconnected");
-        }
-      }
-    }
-
-    // --- Process existing codes (only unprocessed ones) ---
-    async function processExistingCodes() {
-      if (!window.getAllCodes) {
-        console.warn("getAllCodes no disponible aún");
-        return;
-      }
-
-      ubDetail.style.display = "block";
-      ubDetail.innerText = "⏳ Cargando códigos...";
-
-      // Clear previous error/breakdown lists
-      errorListBody.innerHTML = "";
-      errorCount.innerText = "0";
-      errorListContainer.style.display = "none";
-      breakdownBody.innerHTML = "";
-      breakdownCount.innerText = "0";
-      breakdownContainer.style.display = "none";
-
-      const allCodes = await window.getAllCodes();
-
-      // Recalcular totalUB inicial desde el DB deduplicado para evitar saltos o duplicados
-      totalUB = 0;
-      const unprocessed = [];
-      const alreadyProcessedCodes = [];
-
-      allCodes.forEach(c => {
-        if (c.ub_processed) {
-          totalUB += parseFloat(c.ub_value || 0);
-          alreadyProcessedCodes.push(c);
-        } else {
-          unprocessed.push(c);
-        }
-      });
-
-      // Actualizar UI con el total real deducido
-      ubValue.innerText = totalUB.toFixed(2);
-      alreadyProcessedCodes.forEach(c => {
-        if (parseFloat(c.ub_value) > 0) {
-          addBreakdownItem(c.code, c.ub_value, "");
-        }
-      });
-
-      if (unprocessed.length === 0) {
-        ubDetail.innerText = `✔ Todo procesado (${allCodes.length} únicos)`;
-        progressContainer.style.display = "none";
-        return;
-      }
-
-      ubDetail.innerText = `⏳ Procesando 0/${unprocessed.length} NAIs únicos pendientes...`;
-
-      let processed = 0;
-
-      for (const codeObj of unprocessed) {
-        updateProgress(processed, unprocessed.length);
-
-        // Delay between requests
-        await sleep(1500);
-
-        try {
-          const res = await fetch(getApiUrl("/process-nai"), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nai: codeObj.code })
-          });
-
-          const resClone = res.clone();
           let data;
           try {
             data = await res.json();
@@ -1256,21 +1409,22 @@
               data = JSON.parse(data.contents);
             }
           } catch (e) {
-            const text = await resClone.text().catch(() => "Cuerpo inaccesible");
-            apiLog(`Falla JSON ${codeObj.code}: ${text.substring(0, 30)}`);
-            addErrorToList(codeObj.code, `Err ${res.status}: ${text.substring(0, 50)}`);
-            processed++;
-            continue;
+            const text = await res.clone().text().catch(() => "");
+            const msg = `Error ${res.status}: ${text.substring(0, 30) || "Invalid JSON"}`;
+            ubDetail.innerText = `❌ ${msg}`;
+            addErrorToList(nai, msg);
+            return { found: false };
           }
 
-          apiLog(`Respuesta ${codeObj.code}: ${data.status || "OK"}`);
-          console.log(`Respuesta API para ${codeObj.code}:`, data);
+          console.log("API Process Individual:", data);
 
           if (!res.ok) {
-            const errorMsg = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
-            addErrorToList(codeObj.code, errorMsg);
-            processed++;
-            continue;
+            let reason = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
+            if (res.status === 504 || res.status === 502) reason = "Timeout de Proxy (Respuesta lenta)";
+
+            ubDetail.innerText = `❌ ${reason}`;
+            addErrorToList(nai, reason);
+            return { found: false };
           }
 
           if (data.recetas && data.recetas.length > 0) {
@@ -1283,186 +1437,103 @@
             totalUB += naiTotal;
             ubValue.innerText = totalUB.toFixed(2);
 
-            if (window.markCodeProcessed) {
-              window.markCodeProcessed(codeObj.code, naiTotal, paciente);
-            }
+            ubDetail.innerText = `✔ ${paciente} (+${naiTotal.toFixed(2)})`;
+            ubDetail.style.background = "rgba(255,255,255,0.3)";
 
-            addBreakdownItem(codeObj.code, naiTotal, paciente);
+            addBreakdownItem(nai, naiTotal, paciente);
+
+            return {
+              found: true,
+              total_ub: naiTotal,
+              paciente: paciente,
+              details: data.recetas
+            };
           } else {
-            const reason = data.status || data.error || "Sin datos";
-            addErrorToList(codeObj.code, reason);
+            const reason = data.status || "No encontrado";
+            ubDetail.innerText = `❌ ${reason}`;
+            ubDetail.style.background = "rgba(0,0,0,0.1)";
+            addErrorToList(nai, reason);
+            return { found: false };
           }
+
         } catch (e) {
-          console.error(`Error procesando ${codeObj.code}:`, e);
-          addErrorToList(codeObj.code, e.message || "Error de red");
+          console.error("API Error processing NAI", e);
+          ubDetail.innerText = "⚠️ Error API";
+          addErrorToList(nai, e.message || "Error");
+          return { error: e };
+        }
+      }
+    </script>
+
+    <!-- 2. SCRIPT DEL SCANNER -->
+    <script>
+      const resultDiv = document.getElementById("result");
+      const readerId = "reader";
+      const html5QrCode = new Html5Qrcode(readerId);
+
+      function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+      window.restartScanner = function () {
+        resultDiv.innerHTML = "Esperando lectura...";
+        document.getElementById("debug-log").style.display = "none";
+
+        if (html5QrCode.isScanning) {
+          console.log("Scanner ya activo");
+          return;
         }
 
-        processed++;
-        ubDetail.innerText = `⏳ Procesando ${processed}/${unprocessed.length} pendientes...`;
-        updateProgress(processed, unprocessed.length);
+        startScanner();
       }
 
-      // Done
-      const errCount = errorListBody.querySelectorAll(".error-item").length;
-      if (errCount > 0) {
-        ubDetail.innerText = `✔ ${processed - errCount} procesados, ${errCount} errores`;
-        playError();
-      } else {
-        ubDetail.innerText = `✔ ${unprocessed.length} códigos procesados`;
-        playSuccess();
+      function logError(msg, err) {
+        console.error(msg, err);
+        const log = document.getElementById("debug-log");
+        log.style.display = "block";
+        log.innerHTML += `<p>${msg}: ${err?.message || err}</p>`;
       }
-      ubDetail.style.background = "rgba(255,255,255,0.3)";
-      progressContainer.style.display = "none";
-    }
 
-    async function processUbApi(nai) {
-      if (!apiSessionActive) return null;
-
-      try {
-        ubDetail.style.display = "block";
-        ubDetail.innerText = "⏳ Buscando en API...";
-
-        const finalUrl = getApiUrl("/process-nai");
-
-        const res = await fetch(finalUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nai: nai })
-        });
-
-        let data;
+      async function startScanner() {
         try {
-          data = await res.json();
-          const mode = document.getElementById("sel-api-channel").value;
-          if (mode === "proxy2" && data.contents) {
-            data = JSON.parse(data.contents);
+          await html5QrCode.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 320, height: 160 },
+              formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39],
+              experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+              }
+            },
+            (decodedText) => {
+              html5QrCode.stop().then(() => {
+                if (window.checkAndSaveCode) {
+                  window.checkAndSaveCode(decodedText);
+                } else {
+                  alert("Base de datos no cargada aún. Código: " + decodedText);
+                }
+              });
+            }
+          );
+        } catch (err) {
+          logError("Error iniciando cámara", err);
+          resultDiv.innerHTML = "❌ Error de cámara (ver abajo)";
+        }
+
+        try {
+          await sleep(1000);
+          if (html5QrCode.isScanning) {
+            const caps = html5QrCode.getRunningTrackCapabilities();
+            if (caps.zoom && caps.zoom.max > 1) {
+              await html5QrCode.applyVideoConstraints({ advanced: [{ zoom: Math.min(2.0, caps.zoom.max) }] });
+            }
           }
         } catch (e) {
-          const text = await res.clone().text().catch(() => "");
-          const msg = `Error ${res.status}: ${text.substring(0, 30) || "Invalid JSON"}`;
-          ubDetail.innerText = `❌ ${msg}`;
-          addErrorToList(nai, msg);
-          return { found: false };
+          console.log("Zoom no soportado/necesario", e);
         }
-
-        console.log("API Process Individual:", data);
-
-        if (!res.ok) {
-          let reason = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
-          if (res.status === 504 || res.status === 502) reason = "Timeout de Proxy (Respuesta lenta)";
-
-          ubDetail.innerText = `❌ ${reason}`;
-          addErrorToList(nai, reason);
-          return { found: false };
-        }
-
-        if (data.recetas && data.recetas.length > 0) {
-          let naiTotal = 0;
-          let paciente = data.recetas[0].paciente || "Paciente Desconocido";
-          data.recetas.forEach(r => {
-            naiTotal += parseFloat(r.total_ub || 0);
-          });
-
-          totalUB += naiTotal;
-          ubValue.innerText = totalUB.toFixed(2);
-
-          ubDetail.innerText = `✔ ${paciente} (+${naiTotal.toFixed(2)})`;
-          ubDetail.style.background = "rgba(255,255,255,0.3)";
-
-          addBreakdownItem(nai, naiTotal, paciente);
-
-          return {
-            found: true,
-            total_ub: naiTotal,
-            paciente: paciente,
-            details: data.recetas
-          };
-        } else {
-          const reason = data.status || "No encontrado";
-          ubDetail.innerText = `❌ ${reason}`;
-          ubDetail.style.background = "rgba(0,0,0,0.1)";
-          addErrorToList(nai, reason);
-          return { found: false };
-        }
-
-      } catch (e) {
-        console.error("API Error processing NAI", e);
-        ubDetail.innerText = "⚠️ Error API";
-        addErrorToList(nai, e.message || "Error");
-        return { error: e };
-      }
-    }
-  </script>
-
-  <!-- 2. SCRIPT DEL SCANNER -->
-  <script>
-    const resultDiv = document.getElementById("result");
-    const readerId = "reader";
-    const html5QrCode = new Html5Qrcode(readerId);
-
-    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-
-    window.restartScanner = function () {
-      resultDiv.innerHTML = "Esperando lectura...";
-      document.getElementById("debug-log").style.display = "none";
-
-      if (html5QrCode.isScanning) {
-        console.log("Scanner ya activo");
-        return;
       }
 
       startScanner();
-    }
-
-    function logError(msg, err) {
-      console.error(msg, err);
-      const log = document.getElementById("debug-log");
-      log.style.display = "block";
-      log.innerHTML += `<p>${msg}: ${err?.message || err}</p>`;
-    }
-
-    async function startScanner() {
-      try {
-        await html5QrCode.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 320, height: 160 },
-            formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39],
-            experimentalFeatures: {
-              useBarCodeDetectorIfSupported: true
-            }
-          },
-          (decodedText) => {
-            html5QrCode.stop().then(() => {
-              if (window.checkAndSaveCode) {
-                window.checkAndSaveCode(decodedText);
-              } else {
-                alert("Base de datos no cargada aún. Código: " + decodedText);
-              }
-            });
-          }
-        );
-      } catch (err) {
-        logError("Error iniciando cámara", err);
-        resultDiv.innerHTML = "❌ Error de cámara (ver abajo)";
-      }
-
-      try {
-        await sleep(1000);
-        if (html5QrCode.isScanning) {
-          const caps = html5QrCode.getRunningTrackCapabilities();
-          if (caps.zoom && caps.zoom.max > 1) {
-            await html5QrCode.applyVideoConstraints({ advanced: [{ zoom: Math.min(2.0, caps.zoom.max) }] });
-          }
-        }
-      } catch (e) {
-        console.log("Zoom no soportado/necesario", e);
-      }
-    }
-
-    startScanner();
-  </script>
+    </script>
 
 </body>
 
