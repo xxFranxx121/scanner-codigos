@@ -301,16 +301,28 @@
       </label>
     </div>
 
-    <div>
-      <button id="btn-reset-session" onclick="forceResetSession()" title="Resetear sesión API"
-        style="background: #f0f0f0; border: 1px solid #ddd; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer; margin-right: 5px;">
-        🔄
-      </button>
-      <button id="btn-connect" onclick="toggleApiSession()"
-        style="background: #9e2a2b; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
-        <span id="btn-connect-text">Conectar</span>
-      </button>
+    <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
+      <select id="sel-api-channel" style="font-size:10px; padding:2px; border-radius:4px; border:1px solid #ccc;">
+        <option value="proxy1">Canal 1 (Proxy)</option>
+        <option value="proxy2">Canal 2 (Proxy)</option>
+        <option value="direct">Modo Directo (Extensión)</option>
+      </select>
+      <div style="display:flex; gap:5px;">
+        <button id="btn-reset-session" onclick="forceResetSession()" title="Resetear sesión API"
+          style="background: #f0f0f0; border: 1px solid #ddd; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer;">
+          🔄
+        </button>
+        <button id="btn-connect" onclick="toggleApiSession()"
+          style="background: #9e2a2b; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+          <span id="btn-connect-text">Conectar</span>
+        </button>
+      </div>
     </div>
+  </div>
+
+  <div id="api-debug-log"
+    style="display:none; max-width:400px; margin: 5px auto; font-family:monospace; font-size:9px; text-align:left; background:#1e1e1e; color:#0f0; padding:10px; border-radius:5px; max-height:100px; overflow-y:auto; border: 2px solid #333;">
+    [API DEBUG LOG]
   </div>
 
   <!-- TOTAL UB DISPLAY -->
@@ -828,15 +840,28 @@
 
   <!-- 1.5 SCRIPT API UBS INTEGRATION -->
   <script>
-    const PROXY = "https://corsproxy.io/?";
+    const PROXY1 = "https://corsproxy.io/?";
+    const PROXY2 = "https://api.allorigins.win/get?url=";
     const TARGET_API = "https://api-ubs-production.up.railway.app";
     const API_USER = "RRSSRL";
     const API_PASS = "30717143503";
 
+    function apiLog(msg) {
+      console.log("[API DEBUG]", msg);
+      const logArea = document.getElementById("api-debug-log");
+      logArea.style.display = "block";
+      const time = new Date().toLocaleTimeString();
+      logArea.innerHTML += `<div>[${time}] ${msg}</div>`;
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+
     function getApiUrl(endpoint) {
-      const isDirect = document.getElementById("chk-direct-mode").checked;
+      const mode = document.getElementById("sel-api-channel").value;
       const target = `${TARGET_API}${endpoint}`;
-      return isDirect ? target : (PROXY + encodeURIComponent(target));
+
+      if (mode === "direct") return target;
+      if (mode === "proxy2") return PROXY2 + encodeURIComponent(target);
+      return PROXY1 + encodeURIComponent(target);
     }
 
     let apiSessionActive = false;
@@ -978,10 +1003,7 @@
         await sleep(2000);
 
         try {
-          const targetUrl = `${TARGET_API}/process-nai`;
-          const finalUrl = PROXY + encodeURIComponent(targetUrl);
-
-          const res = await fetch(finalUrl, {
+          const res = await fetch(getApiUrl("/process-nai"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ nai: code })
@@ -991,16 +1013,22 @@
           let data;
           try {
             data = await res.json();
+            const mode = document.getElementById("sel-api-channel").value;
+            if (mode === "proxy2" && data.contents) {
+              data = JSON.parse(data.contents);
+            }
           } catch (e) {
             const text = await resClone.text().catch(() => "Cuerpo inaccesible");
+            apiLog(`Falla JSON ${code}: ${text.substring(0, 30)}`);
             addErrorToList(code, `Error HTTP ${res.status}: ${text.substring(0, 50)}`);
             continue;
           }
 
+          apiLog(`Respuesta ${code}: ${data.status || "OK"}`);
           console.log(`Reintento para ${code}:`, data);
 
           if (!res.ok) {
-            const errorMsg = data.error || data.status || `Error ${res.status}`;
+            const errorMsg = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
             addErrorToList(code, errorMsg);
             continue;
           }
@@ -1102,16 +1130,30 @@
             throw new Error(`Error ${res.status}: ${text.substring(0, 40)}`);
           }
 
-          const data = await res.json();
-          console.log("API Login:", data);
+          let data = await res.json();
+          const mode = document.getElementById("sel-api-channel").value;
+          if (mode === "proxy2" && data.contents) {
+            data = JSON.parse(data.contents);
+          }
+
+          apiLog("Login OK: " + (data.status || "Iniciado"));
           updateApiUI("connected");
 
           // Process unprocessed codes
           await processExistingCodes();
 
         } catch (e) {
-          console.error(e);
-          alert("Error conectando a la API: " + e.message);
+          apiLog("Falla fatal: " + e.message);
+          let msg = e.message;
+          if (msg === "Failed to fetch" || msg.includes("fetch")) {
+            const mode = document.getElementById("sel-api-channel").value;
+            if (mode === "direct") {
+              msg = "Error de Red (Failed to fetch). \n\nEl navegador sigue bloqueando la conexión directa desde un archivo local. Intentá cambiar a 'Canal 1' o 'Canal 2' en el selector.";
+            } else {
+              msg = "Error de Red. Es probable que el proxy esté saturado. Intentá cambiar al otro Canal de Proxy o usar el Modo Directo con la extensión.";
+            }
+          }
+          alert("Error conectando a la API: " + msg);
           updateApiUI("disconnected");
         }
       }
@@ -1176,10 +1218,7 @@
         await sleep(1500);
 
         try {
-          const targetUrl = `${TARGET_API}/process-nai`;
-          const finalUrl = PROXY + encodeURIComponent(targetUrl);
-
-          const res = await fetch(finalUrl, {
+          const res = await fetch(getApiUrl("/process-nai"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ nai: codeObj.code })
@@ -1189,17 +1228,23 @@
           let data;
           try {
             data = await res.json();
+            const mode = document.getElementById("sel-api-channel").value;
+            if (mode === "proxy2" && data.contents) {
+              data = JSON.parse(data.contents);
+            }
           } catch (e) {
             const text = await resClone.text().catch(() => "Cuerpo inaccesible");
+            apiLog(`Falla JSON ${codeObj.code}: ${text.substring(0, 30)}`);
             addErrorToList(codeObj.code, `Err ${res.status}: ${text.substring(0, 50)}`);
             processed++;
             continue;
           }
 
+          apiLog(`Respuesta ${codeObj.code}: ${data.status || "OK"}`);
           console.log(`Respuesta API para ${codeObj.code}:`, data);
 
           if (!res.ok) {
-            const errorMsg = data.error || data.status || `Error ${res.status}`;
+            const errorMsg = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
             addErrorToList(codeObj.code, errorMsg);
             processed++;
             continue;
@@ -1265,9 +1310,13 @@
         let data;
         try {
           data = await res.json();
+          const mode = document.getElementById("sel-api-channel").value;
+          if (mode === "proxy2" && data.contents) {
+            data = JSON.parse(data.contents);
+          }
         } catch (e) {
-          const text = await res.text().catch(() => "");
-          const msg = `Error ${res.status}: ${text || "Invalid JSON"}`;
+          const text = await res.clone().text().catch(() => "");
+          const msg = `Error ${res.status}: ${text.substring(0, 30) || "Invalid JSON"}`;
           ubDetail.innerText = `❌ ${msg}`;
           addErrorToList(nai, msg);
           return { found: false };
@@ -1276,7 +1325,7 @@
         console.log("API Process Individual:", data);
 
         if (!res.ok) {
-          const reason = data.error || data.status || `Error ${res.status}`;
+          const reason = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
           ubDetail.innerText = `❌ ${reason}`;
           addErrorToList(nai, reason);
           return { found: false };
