@@ -697,6 +697,22 @@
       const input = document.getElementById("admin-pass");
       const password = input.value;
 
+      // 1. CHECK FOR LOGIN ACTION
+      if (window.pendingDocId === "LOGIN_ACTION") {
+        if (password === "1234") {
+          window.isLoggedIn = true;
+          if (window.updateAuthUI) window.updateAuthUI();
+          window.closeModal();
+          input.value = "";
+        } else {
+          alert("CLAVE INCORRECTA");
+          input.value = "";
+          input.focus();
+        }
+        return;
+      }
+
+      // 2. DELETE ACTION
       if (password !== "1234") {
         alert("⛔ CLAVE INCORRECTA");
         input.value = "";
@@ -1539,15 +1555,15 @@
     }
 
     // --- ACCESS CONTROL SYSTEM ---
-    let isLoggedIn = false;
+    window.isLoggedIn = false;
     const adminControls = document.getElementById("admin-controls");
     const loginBtn = document.getElementById("btn-login");
 
     window.toggleLogin = function () {
-      if (isLoggedIn) {
+      if (window.isLoggedIn) {
         // Logout
-        isLoggedIn = false;
-        updateAuthUI();
+        window.isLoggedIn = false;
+        window.updateAuthUI();
       } else {
         // Show Login Modal
         window.pendingDocId = "LOGIN_ACTION";
@@ -1565,11 +1581,15 @@
       }
     };
 
-    function updateAuthUI() {
-      if (isLoggedIn) {
+    window.updateAuthUI = function () {
+      // Re-fetch in case of stale references (though usually fine)
+      const adminControls = document.getElementById("admin-controls");
+      const loginBtn = document.getElementById("btn-login");
+
+      if (window.isLoggedIn) {
         if (adminControls) adminControls.style.display = "block";
         if (loginBtn) {
-          loginBtn.innerText = "🔓 Salir";
+          loginBtn.innerText = "� Salir";
           loginBtn.style.background = "#444";
         }
       } else {
@@ -1581,74 +1601,10 @@
       }
     }
 
-    // Hook into existing modal confirm
-    // We capture the original if it exists, but since we are redefining it here, we should just implement the branching logic directly.
-
-    // Store original if it was defined previously in the file (it is defined around line 678)
-    // However, to be safe and avoid double definition issues, let's just make one robust function here.
-
-    const OLD_confirmDelete = window.confirmDelete;
-
-    window.confirmDelete = async function () {
-      // 1. LOGIN ACTION
-      if (window.pendingDocId === "LOGIN_ACTION") {
-        const input = document.getElementById("admin-pass");
-        if (input.value === "1234") {
-          isLoggedIn = true;
-          updateAuthUI();
-          window.closeModal();
-          input.value = "";
-          // alert("Login Correcto"); // Optional feedback
-        } else {
-          alert("Clave incorrecta");
-          input.value = "";
-          input.focus();
-        }
-        return;
-      }
-
-      // 2. DELETE ACTION (Default)
-      // If we have a stored original function from the top of the file, call it.
-      // Otherwise fall back to the logic we know is there.
-
-      // Re-implementing the core delete logic here to be absolutely sure it works if the other one is shadowed
-      const input = document.getElementById("admin-pass");
-      if (input.value !== "1234") {
-        alert("⛔ CLAVE INCORRECTA");
-        input.value = "";
-        input.focus();
-        return;
-      }
-
-      const docId = window.pendingDocId;
-      if (!docId) return;
-
-      try {
-        await deleteDoc(doc(db, CODES_COLLECTION, docId));
-        if (window.closeModal) window.closeModal();
-
-        const resultDiv = document.getElementById("result");
-        resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
-
-        setTimeout(() => {
-          if (window.restartScanner) {
-            window.restartScanner();
-          } else {
-            resultDiv.innerHTML = "Esperando lectura...";
-          }
-        }, 1500);
-
-      } catch (e) {
-        console.error(e);
-        alert("Error al eliminar: " + e.message);
-      }
-    };
-
-
     // Only call API if logged in
     const realProcessUbApi = window.processUbApi;
     window.processUbApi = async function (nai) {
-      if (!isLoggedIn) {
+      if (!window.isLoggedIn) {
         const resultDiv = document.getElementById("result");
         // Silent skip or small log?
         console.log("Skipping API for " + nai + " (Not logged in)");
