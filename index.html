@@ -950,7 +950,12 @@
         errorListBody.appendChild(item);
       }
 
-      const reasonStr = String(reason || "");
+      let reasonStr = "";
+      if (typeof reason === "object" && reason !== null) {
+        reasonStr = reason.message || reason.error || JSON.stringify(reason);
+      } else {
+        reasonStr = String(reason || "");
+      }
       const isTimeout = reasonStr.toLowerCase().includes("timeout") || reasonStr.includes("504") || reasonStr.includes("502");
       const displayReason = isTimeout ? "⚠️ Posible Timeout de Proxy (30s+)" : reasonStr;
 
