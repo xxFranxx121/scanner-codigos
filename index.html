@@ -295,6 +295,10 @@
     <div style="text-align: left;">
       <div id="api-status-indicator" style="font-size: 12px; font-weight: bold; color: #999;">🔴 Desconectado</div>
       <div style="font-size: 10px; color: #ccc;">API UBS Railway</div>
+      <label
+        style="font-size: 9px; color: #666; display: flex; align-items: center; gap: 3px; cursor: pointer; margin-top: 3px;">
+        <input type="checkbox" id="chk-direct-mode" style="margin:0;"> Modo Directo (Requiere Extensión)
+      </label>
     </div>
 
     <div>
@@ -829,6 +833,12 @@
     const API_USER = "RRSSRL";
     const API_PASS = "30717143503";
 
+    function getApiUrl(endpoint) {
+      const isDirect = document.getElementById("chk-direct-mode").checked;
+      const target = `${TARGET_API}${endpoint}`;
+      return isDirect ? target : (PROXY + encodeURIComponent(target));
+    }
+
     let apiSessionActive = false;
     let totalUB = window._persistedTotalUB || 0.0;
 
@@ -1058,8 +1068,7 @@
     async function toggleApiSession() {
       if (apiSessionActive) {
         try {
-          const targetUrl = `${TARGET_API}/stop-session`;
-          const finalUrl = PROXY + encodeURIComponent(targetUrl);
+          const finalUrl = getApiUrl("/stop-session");
           fetch(finalUrl, { method: "POST" }).catch(e => console.warn("Error stopping session", e));
         } catch (e) {
           console.error(e);
@@ -1080,8 +1089,7 @@
             headless: true
           };
 
-          const targetUrl = `${TARGET_API}/start-session`;
-          const finalUrl = PROXY + encodeURIComponent(targetUrl);
+          const finalUrl = getApiUrl("/start-session");
 
           const res = await fetch(finalUrl, {
             method: "POST",
@@ -1089,7 +1097,10 @@
             body: JSON.stringify(payload)
           });
 
-          if (!res.ok) throw new Error("Error en login API (" + res.status + ")");
+          if (!res.ok) {
+            const text = await res.text().catch(() => "Sin detalle");
+            throw new Error(`Error ${res.status}: ${text.substring(0, 40)}`);
+          }
 
           const data = await res.json();
           console.log("API Login:", data);
@@ -1243,8 +1254,7 @@
         ubDetail.style.display = "block";
         ubDetail.innerText = "⏳ Buscando en API...";
 
-        const targetUrl = `${TARGET_API}/process-nai`;
-        const finalUrl = PROXY + encodeURIComponent(targetUrl);
+        const finalUrl = getApiUrl("/process-nai");
 
         const res = await fetch(finalUrl, {
           method: "POST",
