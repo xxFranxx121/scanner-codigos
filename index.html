@@ -99,36 +99,56 @@
 
     .history-item .time {
       font-size: 0.75em;
-      color: #888;
-      margin-top: 2px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 15px;
+      padding: 10px;
+      min-height: 40px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
-    .delete-btn {
-      background: #fff;
-      border: 1px solid #ffcccc;
-      color: #cc0000;
-      border-radius: 4px;
-      padding: 6px 10px;
+    /* Input manual wrapper */
+    .manual-input-wrapper {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px auto;
+      max-width: 320px;
+    }
+
+    #manual-nai,
+    #manual-delete-nai {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    .btn-manual {
+      padding: 10px 15px;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
-      font-size: 14px;
+      font-weight: bold;
     }
 
-    .delete-btn:hover {
-      background: #ffeeee;
+    .btn-delete-manual {
+      background: #9e2a2b;
     }
 
-    .hint {
-      font-size: 12px;
-      color: #777;
-      margin-top: 30px;
-      border-top: 1px solid #eee;
-      padding-top: 10px;
-    }
-
-    footer {
-      margin-top: 40px;
-      font-size: 11px;
-      color: #aaa;
+    /* Ocultar input delete por defecto */
+    #manual-delete-container {
+      display: none;
+      margin-top: 5px;
     }
 
     /* --- PROGRESS BAR --- */
@@ -162,39 +182,55 @@
       }
     }
 
-    /* --- ERROR LIST --- */
-    .error-list-container {
+    /* --- LISTS (Error & Breakdown) --- */
+    .list-container {
       max-width: 400px;
       margin: 10px auto;
       text-align: left;
       display: none;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
     }
 
-    .error-list-header {
+    .list-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
-      background: #fff3f3;
-      padding: 8px 12px;
-      border-radius: 6px;
-      border-left: 4px solid #cc0000;
+      background: #f0f0f0;
+      padding: 10px 15px;
+      font-weight: bold;
+      color: #333;
+      border-bottom: 1px solid #eee;
     }
 
-    .error-list-header:hover {
-      background: #ffe5e5;
+    .list-header:hover {
+      background: #e0e0e0;
     }
 
-    .error-item {
+    .list-body {
+      padding: 5px 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .error-item,
+    .breakdown-item {
       background: #fff;
       margin: 4px 0;
       padding: 8px 12px;
       border-radius: 4px;
       font-size: 13px;
-      border-left: 3px solid #ff6b6b;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .error-item {
+      border-left: 3px solid #ff6b6b;
     }
 
     .error-item .error-code {
@@ -207,39 +243,8 @@
       color: #888;
     }
 
-    /* --- BREAKDOWN --- */
-    .breakdown-container {
-      max-width: 400px;
-      margin: 10px auto;
-      text-align: left;
-      display: none;
-    }
-
-    .breakdown-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      background: #f0f7ff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      border-left: 4px solid #007bff;
-    }
-
-    .breakdown-header:hover {
-      background: #e0efff;
-    }
-
     .breakdown-item {
-      background: #fff;
-      margin: 4px 0;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 13px;
       border-left: 3px solid #28a745;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
 
     .breakdown-item .ub-val {
@@ -285,7 +290,7 @@
 
 <body>
 
-  <h1>FACTURADOR OPTIMI</h1>
+  <h1>FACTURACION OPTIMI</h1>
   <p class="subtitle">Laboratorio de Análisis Banda</p>
 
   <button id="btn-login" onclick="toggleLogin()"
@@ -293,8 +298,6 @@
     Login</button>
 
   <div id="admin-controls" style="display:none;">
-
-
     <!-- API CONTROL PANEL -->
     <div
       style="background: white; max-width: 400px; margin: 10px auto; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
@@ -359,45 +362,7 @@
     <button id="btn-export" onclick="exportCSV()">📤 Exportar CSV</button>
   </div>
 
-  <!-- ERROR LIST (Live) -->
-  <div id="error-list-container" class="error-list-container">
-    <div class="error-list-header">
-      <span onclick="toggleErrorList()" style="flex:1; cursor:pointer;">❌ <strong>NAIs con Error</strong> (<span
-          id="error-count">0</span>)</span>
-      <span id="error-toggle-icon" onclick="toggleErrorList()" style="cursor:pointer;">▼</span>
-      <button id="btn-retry" onclick="retryFailedNAIs()"
-        style="margin-left:8px; background:#cc0000; color:white; border:none; padding:4px 10px; border-radius:12px; font-size:11px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:3px;">
-        🔄 Reintentar
-      </button>
-    </div>
-    <div id="error-list-body" style="display:none; margin-top: 4px;">
-      <!-- Error items appended here -->
-    </div>
-  </div>
-
-  <!-- BREAKDOWN LIST -->
-  <div id="breakdown-container" class="breakdown-container">
-    <div class="breakdown-header" onclick="toggleBreakdown()">
-      <span>📊 <strong>Desglose por NAI</strong> (<span id="breakdown-count">0</span>)</span>
-      <span id="breakdown-toggle-icon">▼</span>
-    </div>
-    <div id="breakdown-body" style="display:none; margin-top: 4px;">
-      <!-- Breakdown items appended here -->
-    </div>
-  </div>
-
   <div id="reader"></div>
-
-  <!-- MANUAL INPUT -->
-  <div
-    style="max-width: 400px; margin: 0 auto 20px auto; display: flex; gap: 10px; padding: 0 5px; box-sizing: border-box;">
-    <input type="text" id="manual-nai" placeholder="Ingresar NAI manual..."
-      style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s;">
-    <button onclick="handleManualNai()"
-      style="background: #9e2a2b; color: white; border: none; padding: 0 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-      Cargar
-    </button>
-  </div>
 
   <div id="result">
     <span style="color:#777">Esperando escaneo...</span>
@@ -455,7 +420,7 @@
       <h3 style="margin-top:0; color:#9e2a2b; border:none;">🔐 Acceso Admin</h3>
       <p style="color:#666; font-size:14px;">Para eliminar el registro, ingrese la clave:</p>
 
-      <input type="number" id="admin-pass" placeholder="Clave (1234)"
+      <input type="password" id="admin-pass" placeholder="Clave..."
         style="width:100%; padding:12px; box-sizing:border-box; margin-bottom:20px; border:1px solid #ccc; border-radius:6px; font-size:18px; text-align:center;">
 
       <div style="display:flex; justify-content:space-between; gap:10px;">
@@ -693,13 +658,32 @@
       }
     }
 
+    // --- MANUAL DELETE LOGIC ---
+    window.initiateManualDelete = async function () {
+      const input = document.getElementById("manual-delete-nai");
+      const nai = input.value.trim();
+      if (!nai) return;
+
+      // Find docId by NAI
+      const q = query(collection(db, CODES_COLLECTION), where("code", "==", nai), orderBy("timestamp", "desc"), limit(1));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        alert("No se encontró el NAI " + nai);
+        return;
+      }
+
+      const docSnap = snap.docs[0];
+      window.openDeleteModal(docSnap.id);
+    };
+
     window.confirmDelete = async function () {
       const input = document.getElementById("admin-pass");
       const password = input.value;
 
       // 1. CHECK FOR LOGIN ACTION
       if (window.pendingDocId === "LOGIN_ACTION") {
-        if (password === "1234") {
+        if (password === "admin") {
           window.isLoggedIn = true;
           if (window.updateAuthUI) window.updateAuthUI();
           window.closeModal();
@@ -713,7 +697,7 @@
       }
 
       // 2. DELETE ACTION
-      if (password !== "1234") {
+      if (password !== "borrar") {
         alert("⛔ CLAVE INCORRECTA");
         input.value = "";
         input.focus();
@@ -729,6 +713,9 @@
 
         const resultDiv = document.getElementById("result");
         resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
+
+        // Clear manual input if it was used
+        document.getElementById("manual-delete-nai").value = "";
 
         setTimeout(() => {
           if (window.restartScanner) {
