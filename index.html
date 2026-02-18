@@ -298,6 +298,10 @@
     </div>
 
     <div>
+      <button id="btn-reset-session" onclick="forceResetSession()" title="Resetear sesión API"
+        style="background: #f0f0f0; border: 1px solid #ddd; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer; margin-right: 5px;">
+        🔄
+      </button>
       <button id="btn-connect" onclick="toggleApiSession()"
         style="background: #9e2a2b; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
         <span id="btn-connect-text">Conectar</span>
@@ -856,6 +860,7 @@
         btnConnect.style.background = "#ccc";
         btnText.innerText = "Conectando...";
         btnConnect.disabled = true;
+        document.getElementById("btn-reset-session").style.display = "none";
       } else if (state === "connected") {
         apiSessionActive = true;
         btnConnect.style.background = "#444";
@@ -865,6 +870,7 @@
         statusInd.style.color = "#28a745";
         ubDisplay.style.display = "block";
         toolbar.style.display = "flex";
+        document.getElementById("btn-reset-session").style.display = "inline-flex";
       } else if (state === "disconnected") {
         apiSessionActive = false;
         btnConnect.style.background = "#9e2a2b";
@@ -873,7 +879,15 @@
         statusInd.innerHTML = "🔴 Desconectado";
         statusInd.style.color = "#999";
         progressContainer.style.display = "none";
+        document.getElementById("btn-reset-session").style.display = "none";
       }
+    }
+
+    async function forceResetSession() {
+      if (!confirm("¿Deseas resetear la sesión API? Útil si aparecen errores 400 constantes.")) return;
+      apiSessionActive = true; // Pretend it's active to trigger stop
+      await toggleApiSession(); // Stop
+      await toggleApiSession(); // Start again
     }
 
     function updateProgress(current, total) {
@@ -963,19 +977,21 @@
             body: JSON.stringify({ nai: code })
           });
 
+          const resClone = res.clone();
           let data;
           try {
             data = await res.json();
           } catch (e) {
-            const text = await res.text().catch(() => "");
-            addErrorToList(code, `Error HTTP ${res.status}: ${text || "No JSON"}`);
+            const text = await resClone.text().catch(() => "Cuerpo inaccesible");
+            addErrorToList(code, `Error HTTP ${res.status}: ${text.substring(0, 50)}`);
             continue;
           }
 
           console.log(`Reintento para ${code}:`, data);
 
           if (!res.ok) {
-            addErrorToList(code, data.error || data.status || `Error ${res.status}`);
+            const errorMsg = data.error || data.status || `Error ${res.status}`;
+            addErrorToList(code, errorMsg);
             continue;
           }
 
@@ -1158,12 +1174,13 @@
             body: JSON.stringify({ nai: codeObj.code })
           });
 
+          const resClone = res.clone();
           let data;
           try {
             data = await res.json();
           } catch (e) {
-            const text = await res.text().catch(() => "");
-            addErrorToList(codeObj.code, `Err HTTP ${res.status}: ${text || "No JSON"}`);
+            const text = await resClone.text().catch(() => "Cuerpo inaccesible");
+            addErrorToList(codeObj.code, `Err ${res.status}: ${text.substring(0, 50)}`);
             processed++;
             continue;
           }
@@ -1171,7 +1188,8 @@
           console.log(`Respuesta API para ${codeObj.code}:`, data);
 
           if (!res.ok) {
-            addErrorToList(codeObj.code, data.error || data.status || `Error ${res.status}`);
+            const errorMsg = data.error || data.status || `Error ${res.status}`;
+            addErrorToList(codeObj.code, errorMsg);
             processed++;
             continue;
           }
