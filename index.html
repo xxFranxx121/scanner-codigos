@@ -684,24 +684,29 @@
 
     // --- MANUAL DELETE LOGIC ---
     window.initiateManualDelete = async function () {
-      const input = document.getElementById("manual-nai");
-      const nai = input.value.trim().toUpperCase();
-      if (!nai) {
-        alert("Ingresa un NAI para eliminar");
-        return;
+      try {
+        const input = document.getElementById("manual-nai");
+        const nai = input.value.trim().toUpperCase();
+        if (!nai) {
+          alert("Ingresa un NAI para eliminar");
+          return;
+        }
+
+        // Find docId by NAI - Removed orderBy to avoid missing index error
+        const q = query(collection(db, CODES_COLLECTION), where("code", "==", nai), limit(1));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+          alert("No se encontró el NAI " + nai);
+          return;
+        }
+
+        const docSnap = snap.docs[0];
+        window.openDeleteModal(docSnap.id);
+      } catch (e) {
+        console.error("Error manual delete:", e);
+        alert("Error buscando NAI: " + e.message);
       }
-
-      // Find docId by NAI
-      const q = query(collection(db, CODES_COLLECTION), where("code", "==", nai), orderBy("timestamp", "desc"), limit(1));
-      const snap = await getDocs(q);
-
-      if (snap.empty) {
-        alert("No se encontró el NAI " + nai);
-        return;
-      }
-
-      const docSnap = snap.docs[0];
-      window.openDeleteModal(docSnap.id);
     };
 
     window.confirmDelete = async function () {
