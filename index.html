@@ -884,6 +884,20 @@
     const breakdownBody = document.getElementById("breakdown-body");
     const breakdownCount = document.getElementById("breakdown-count");
 
+    // --- DIRECT MODE SYNC ---
+    const chkDirect = document.getElementById("chk-direct-mode");
+    const selChannel = document.getElementById("sel-api-channel");
+
+    if (chkDirect && selChannel) {
+      chkDirect.addEventListener("change", (e) => {
+        selChannel.value = e.target.checked ? "direct" : "proxy1";
+      });
+
+      selChannel.addEventListener("change", (e) => {
+        chkDirect.checked = (e.target.value === "direct");
+      });
+    }
+
     // Initialize from persisted (with deduplication safety)
     if (window._persistedTotalUB) {
       totalUB = window._persistedTotalUB;
