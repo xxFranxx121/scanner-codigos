@@ -950,9 +950,12 @@
         errorListBody.appendChild(item);
       }
 
+      const isTimeout = reason.toLowerCase().includes("timeout") || reason.includes("504") || reason.includes("502");
+      const displayReason = isTimeout ? "⚠️ Posible Timeout de Proxy (30s+)" : reason;
+
       item.innerHTML = `
         <span class="error-code">${code}</span>
-        <span class="error-msg">${reason}</span>
+        <span class="error-msg">${displayReason}</span>
       `;
 
       const count = errorListBody.querySelectorAll(".error-item").length;
@@ -1148,9 +1151,9 @@
           if (msg === "Failed to fetch" || msg.includes("fetch")) {
             const mode = document.getElementById("sel-api-channel").value;
             if (mode === "direct") {
-              msg = "Error de Red (Failed to fetch). \n\nEl navegador sigue bloqueando la conexión directa desde un archivo local. Intentá cambiar a 'Canal 1' o 'Canal 2' en el selector.";
+              msg = "Error de Red (Failed to fetch). Probablemente Chrome bloquea el pedido. Asegurate de tener activado el switch en la extensión CORS.";
             } else {
-              msg = "Error de Red. Es probable que el proxy esté saturado. Intentá cambiar al otro Canal de Proxy o usar el Modo Directo con la extensión.";
+              msg = "Error de Red / Timeout. Los proxies gratuitos cortan a los 30 segundos. Si este NAI es lento, intentá con Modo Directo.";
             }
           }
           alert("Error conectando a la API: " + msg);
@@ -1325,7 +1328,9 @@
         console.log("API Process Individual:", data);
 
         if (!res.ok) {
-          const reason = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
+          let reason = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
+          if (res.status === 504 || res.status === 502) reason = "Timeout de Proxy (Respuesta lenta)";
+
           ubDetail.innerText = `❌ ${reason}`;
           addErrorToList(nai, reason);
           return { found: false };
