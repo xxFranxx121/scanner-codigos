@@ -484,6 +484,16 @@
       window.pendingDocId = docId;
       const modal = document.getElementById("auth-modal");
       const input = document.getElementById("admin-pass");
+
+      // Reset text for delete mode
+      const btn = modal.querySelector("button[onclick*='confirm']");
+      const title = modal.querySelector("h3");
+      const msg = modal.querySelector("p");
+
+      if (title) title.innerText = "🔐 Acceso Admin";
+      if (msg) msg.innerText = "Para eliminar el registro, ingrese la clave:";
+      if (btn) btn.innerText = "Eliminar";
+
       modal.style.display = "flex";
       input.value = "";
       input.focus();
@@ -1540,21 +1550,34 @@
         updateAuthUI();
       } else {
         // Show Login Modal
-        window.pendingDocId = "LOGIN_ACTION"; // reuse existing slot
-        document.getElementById("auth-modal").style.display = "flex";
+        window.pendingDocId = "LOGIN_ACTION";
+        const modal = document.getElementById("auth-modal");
+        const btn = modal.querySelector("button[onclick*='confirm']"); // The confirm button
+        const title = modal.querySelector("h3");
+        const msg = modal.querySelector("p");
+
+        if (title) title.innerText = "🔐 Acceso Admin";
+        if (msg) msg.innerText = "Ingrese su clave de acceso:";
+        if (btn) btn.innerText = "Ingresar";
+
+        modal.style.display = "flex";
         document.getElementById("admin-pass").focus();
       }
     };
 
     function updateAuthUI() {
       if (isLoggedIn) {
-        adminControls.style.display = "block";
-        loginBtn.innerText = "🔓 Salir";
-        loginBtn.style.background = "#444";
+        if (adminControls) adminControls.style.display = "block";
+        if (loginBtn) {
+          loginBtn.innerText = "🔓 Salir";
+          loginBtn.style.background = "#444";
+        }
       } else {
-        adminControls.style.display = "none";
-        loginBtn.innerText = "🔒 Login";
-        loginBtn.style.background = "#9e2a2b";
+        if (adminControls) adminControls.style.display = "none";
+        if (loginBtn) {
+          loginBtn.innerText = "🔒 Login";
+          loginBtn.style.background = "#9e2a2b";
+        }
       }
     }
 
@@ -1563,7 +1586,7 @@
     window.confirmDelete = async function () {
       if (window.pendingDocId === "LOGIN_ACTION") {
         const input = document.getElementById("admin-pass");
-        if (input.value === "1234") { // Simple hardcoded pass as requested
+        if (input.value === "1234") {
           isLoggedIn = true;
           updateAuthUI();
           window.closeModal();
@@ -1571,10 +1594,11 @@
         } else {
           alert("Clave incorrecta");
           input.value = "";
+          input.focus();
         }
         return;
       }
-      // Fallback to original delete logic
+      // Fallback to original delete logic if exists
       if (originalConfirm) await originalConfirm();
     };
 
