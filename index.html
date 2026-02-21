@@ -103,6 +103,12 @@
       margin-top: 2px;
     }
 
+    .history-item .device {
+      font-size: 0.68em;
+      color: #aaa;
+      margin-top: 1px;
+    }
+
     /* Input manual wrapper */
     .manual-input-wrapper {
       display: flex;
@@ -312,6 +318,11 @@
             style="background: #f0f0f0; border: 1px solid #ddd; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer;">
             🔄
           </button>
+          <button id="btn-reset-all" onclick="window.initiateResetAll()"
+            title="Resetear TODOS los procesados (Volver a 0)"
+            style="background: #fff0f0; border: 1px solid #ffcccc; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer; color: #cc0000;">
+            🧨
+          </button>
           <button id="btn-connect" onclick="toggleApiSession()"
             style="background: #9e2a2b; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
             <span id="btn-connect-text">Conectar</span>
@@ -479,9 +490,15 @@
       const title = modal.querySelector("h3");
       const msg = modal.querySelector("p");
 
-      if (title) title.innerText = "🔐 Acceso Admin";
-      if (msg) msg.innerText = "Para eliminar el registro, ingrese la clave:";
-      if (btn) btn.innerText = "Eliminar";
+      if (docId === "RESET_ALL_UBS") {
+        if (title) title.innerText = "🧨 Resetear Todo";
+        if (msg) msg.innerText = "Para volver a 0 todas las lecturas (SIN BORRAR NAIS), ingrese la clave:";
+        if (btn) btn.innerText = "RESETEAR";
+      } else {
+        if (title) title.innerText = "🔐 Acceso Admin";
+        if (msg) msg.innerText = "Para eliminar el registro, ingrese la clave:";
+        if (btn) btn.innerText = "Eliminar";
+      }
 
       modal.style.display = "flex";
       input.value = "";
@@ -647,6 +664,33 @@
     }
 
     // --- HISTORY LISTENER ---
+    function formatArgDate(timestamp) {
+      if (!timestamp) return "Reciente";
+      const d = new Date(timestamp.seconds * 1000);
+      return d.toLocaleString("es-AR", {
+        timeZone: "America/Argentina/Buenos_Aires",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      });
+    }
+
+    function getDeviceLabel(ua) {
+      if (!ua) return "";
+      const u = ua.toLowerCase();
+      if (u.includes("android")) return "📱 Android";
+      if (u.includes("iphone")) return "🍎 iPhone";
+      if (u.includes("ipad")) return "🍎 iPad";
+      if (u.includes("windows")) return "🖥️ Windows";
+      if (u.includes("mac")) return "🍏 Mac";
+      if (u.includes("linux")) return "🐧 Linux";
+      return "🌐 Otro";
+    }
+
     function startHistoryListener() {
       const historyList = document.getElementById("history-list");
       if (!historyList) return;
@@ -657,7 +701,8 @@
         historyList.innerHTML = "";
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString() : "Reciente";
+          const dateStr = formatArgDate(data.timestamp);
+          const deviceStr = getDeviceLabel(data.device);
           const ubBadge = data.ub_processed ? `<span style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>` : "";
 
           const item = document.createElement("li");
@@ -665,7 +710,8 @@
           item.innerHTML = `
             <div class="info">
               <strong>${data.code}${ubBadge}</strong>
-              <span class="time">${date}</span>
+              <span class="time">${dateStr}</span>
+              ${deviceStr ? `<span class="device">${deviceStr}</span>` : ""}
             </div>
             <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
           `;
@@ -728,7 +774,7 @@
         return;
       }
 
-      // 2. DELETE ACTION
+      // 2. DELETE / RESET ACTION
       if (password !== "borrar") {
         alert("⛔ CLAVE INCORRECTA");
         input.value = "";
@@ -737,6 +783,13 @@
       }
 
       const docId = window.pendingDocId;
+
+      // 3. SPECIAL ACTION: RESET ALL
+      if (docId === "RESET_ALL_UBS") {
+        await window.performResetAll();
+        return;
+      }
+
       if (!docId) return;
 
       try {
@@ -785,6 +838,59 @@
         alert("Error al eliminar: " + e.message);
       }
     }
+
+    // --- RESET ALL LOGIC (AGREGADO) ---
+    window.initiateResetAll = function () {
+      if (window.openDeleteModal) {
+        window.openDeleteModal("RESET_ALL_UBS");
+      }
+    };
+
+    window.performResetAll = async function () {
+      if (window.closeModal) window.closeModal();
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "⏳ Reseteando lecturas...";
+
+      try {
+        const q = query(collection(db, CODES_COLLECTION));
+        const snapshot = await getDocs(q);
+
+        const updates = [];
+        snapshot.forEach(docSnap => {
+          updates.push(updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
+            ub_processed: false,
+            ub_value: 0,
+            ub_paciente: ""
+          }));
+        });
+
+        await Promise.all(updates);
+
+        // Reset local logic
+        totalUB = 0;
+        const ubValue = document.getElementById("total-ub-value");
+        if (ubValue) ubValue.innerText = "0.00";
+
+        // Clear lists
+        document.getElementById("breakdown-body").innerHTML = "";
+        document.getElementById("breakdown-count").innerText = "0";
+        document.getElementById("breakdown-container").style.display = "none";
+
+        // Clear error list too if any
+        document.getElementById("error-list-body").innerHTML = "";
+        document.getElementById("error-count").innerText = "0";
+        document.getElementById("error-list-container").style.display = "none";
+
+        alert("✅ Se han reseteado " + updates.length + " registros a 0 UB.");
+        resultDiv.innerHTML = "Esperando lectura...";
+
+      } catch (e) {
+        console.error("Error resetting all:", e);
+        alert("Error al resetear: " + e.message);
+        resultDiv.innerHTML = "❌ Error reset";
+      }
+    };
 
     // --- QUEUE SYSTEM ---
     const scanQueue = [];
@@ -1054,7 +1160,9 @@
         statusInd.style.color = "#28a745";
         ubDisplay.style.display = "block";
         toolbar.style.display = "flex";
+        toolbar.style.display = "flex";
         document.getElementById("btn-reset-session").style.display = "inline-flex";
+        document.getElementById("btn-reset-all").style.display = "inline-flex";
       } else if (state === "disconnected") {
         apiSessionActive = false;
         btnConnect.style.background = "#9e2a2b";
