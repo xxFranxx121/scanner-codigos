@@ -294,6 +294,11 @@
     Login</button>
 
   <div id="admin-controls" style="display:none;">
+    <div style="text-align: right; margin-bottom: 5px; max-width: 400px; margin-left: auto; margin-right: auto; padding-top: 10px;">
+      <button onclick="window.initiateDeleteAllDb()" style="background:#cc0000; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+        🚨 Limpiar Base de Datos (Eliminar Todos)
+      </button>
+    </div>
     <!-- API CONTROL PANEL -->
     <div
       style="background: white; max-width: 400px; margin: 10px auto; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
@@ -494,6 +499,10 @@
         if (title) title.innerText = "🧨 Resetear Todo";
         if (msg) msg.innerText = "Para volver a 0 todas las lecturas (SIN BORRAR NAIS), ingrese la clave:";
         if (btn) btn.innerText = "RESETEAR";
+      } else if (docId === "DELETE_ALL_DB") {
+        if (title) title.innerText = "🚨 LIMPIEZA TOTAL";
+        if (msg) msg.innerText = "Para ELIMINAR TODOS LOS CÓDIGOS de la base de datos, ingrese la clave:";
+        if (btn) btn.innerText = "ELIMINAR TODO";
       } else {
         if (title) title.innerText = "🔐 Acceso Admin";
         if (msg) msg.innerText = "Para eliminar el registro, ingrese la clave:";
@@ -784,9 +793,14 @@
 
       const docId = window.pendingDocId;
 
-      // 3. SPECIAL ACTION: RESET ALL
+      // 3. SPECIAL ACTION: RESET ALL O DELETE ALL
       if (docId === "RESET_ALL_UBS") {
         await window.performResetAll();
+        return;
+      }
+
+      if (docId === "DELETE_ALL_DB") {
+        await window.performDeleteAllDb();
         return;
       }
 
@@ -889,6 +903,56 @@
         console.error("Error resetting all:", e);
         alert("Error al resetear: " + e.message);
         resultDiv.innerHTML = "❌ Error reset";
+      }
+    };
+
+    // --- DELETE ALL DB LOGIC (AGREGADO) ---
+    window.initiateDeleteAllDb = function () {
+      if (window.openDeleteModal) {
+        window.openDeleteModal("DELETE_ALL_DB");
+      }
+    };
+
+    window.performDeleteAllDb = async function () {
+      if (window.closeModal) window.closeModal();
+
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = "⏳ Eliminando todos los registros...";
+
+      try {
+        const q = query(collection(db, CODES_COLLECTION));
+        const snapshot = await getDocs(q);
+
+        const deletes = [];
+        snapshot.forEach(docSnap => {
+          deletes.push(deleteDoc(doc(db, CODES_COLLECTION, docSnap.id)));
+        });
+
+        await Promise.all(deletes);
+
+        // Reset local logic
+        totalUB = 0;
+        const ubValue = document.getElementById("total-ub-value");
+        if (ubValue) ubValue.innerText = "0.00";
+
+        // Clear lists
+        document.getElementById("breakdown-body").innerHTML = "";
+        document.getElementById("breakdown-count").innerText = "0";
+        document.getElementById("breakdown-container").style.display = "none";
+
+        document.getElementById("error-list-body").innerHTML = "";
+        document.getElementById("error-count").innerText = "0";
+        document.getElementById("error-list-container").style.display = "none";
+
+        if(window._persistedTotalUB !== undefined) window._persistedTotalUB = 0;
+
+        alert("✅ Se han eliminado " + deletes.length + " registros de la base de datos.");
+        resultDiv.innerHTML = "Esperando lectura...";
+
+      } catch (e) {
+        console.error("Error deleting all:", e);
+        alert("Error al eliminar todo: " + e.message);
+        resultDiv.innerHTML = "❌ Error limpieza";
       }
     };
 
