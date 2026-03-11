@@ -1745,13 +1745,34 @@
             }
           },
           (decodedText) => {
-            html5QrCode.stop().then(() => {
-              if (window.checkAndSaveCode) {
-                window.checkAndSaveCode(decodedText);
-              } else {
-                alert("Base de datos no cargada aún. Código: " + decodedText);
+            const now = Date.now();
+            if (!window.lastScanTime) window.lastScanTime = 0;
+            
+            // Evitar escanear el MISMO código rápidamente (cooldown de 3 segundos)
+            if (window.lastScannedCode === decodedText && now - window.lastScanTime < 3000) {
+              return;
+            }
+            // Evitar cualquier escaneo súper rápido en cadena (cooldown de 1.5 segundos)
+            if (now - window.lastScanTime < 1500) {
+              return;
+            }
+
+            window.lastScannedCode = decodedText;
+            window.lastScanTime = now;
+
+            if (window.checkAndSaveCode) {
+              window.checkAndSaveCode(decodedText);
+            } else {
+              alert("Base de datos no cargada aún. Código: " + decodedText);
+            }
+
+            // Restaurar texto de espera si está libre y pasaron unos segundos
+            setTimeout(() => {
+              const res = document.getElementById("result");
+              if (res && res.innerHTML.includes("GUARDADO")) {
+                res.innerHTML = "Esperando lectura...";
               }
-            });
+            }, 4000);
           }
         );
       } catch (err) {
