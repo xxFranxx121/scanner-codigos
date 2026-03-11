@@ -299,6 +299,7 @@
         🚨 Limpiar Base de Datos (Eliminar Todos)
       </button>
     </div>
+  </div>
     <!-- API CONTROL PANEL -->
     <div
       style="background: white; max-width: 400px; margin: 10px auto; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
@@ -355,7 +356,6 @@
         </div>
       </div>
     </div>
-  </div>
 
   <!-- PROGRESS BAR -->
   <div id="progress-container" class="progress-container">
@@ -1814,18 +1814,6 @@
         }
       }
     }
-
-    // Only call API if logged in
-    const realProcessUbApi = window.processUbApi;
-    window.processUbApi = async function (nai) {
-      if (!window.isLoggedIn) {
-        const resultDiv = document.getElementById("result");
-        // Silent skip or small log?
-        console.log("Skipping API for " + nai + " (Not logged in)");
-        return null;
-      }
-      return await realProcessUbApi(nai);
-    };
 
     startScanner();
   </script>
