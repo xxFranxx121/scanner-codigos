@@ -281,6 +281,10 @@
       color: white;
       border-color: #9e2a2b;
     }
+
+    body:not(.logged-in) .admin-only {
+      display: none !important;
+    }
   </style>
 </head>
 
@@ -343,7 +347,7 @@
     </div>
 
     <!-- TOTAL UB DISPLAY -->
-    <div id="ub-display" style="display: none; max-width: 400px; margin: 0 auto 10px auto;">
+    <div id="ub-display" class="admin-only" style="display: none; max-width: 400px; margin: 0 auto 10px auto;">
       <div
         style="background: linear-gradient(135deg, #9e2a2b 0%, #d9534f 100%); color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(158, 42, 43, 0.3);">
         <div style="font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;">Total Unidades
@@ -402,7 +406,7 @@
     </div>
   </div>
 
-  <div class="list-container" id="breakdown-container" style="display:none; border-left: 5px solid #00AAFF;">
+  <div class="list-container admin-only" id="breakdown-container" style="display:none; border-left: 5px solid #00AAFF;">
     <div class="list-header" onclick="toggleBreakdown()">
       <span>📋 Desglose (<span id="breakdown-count">0</span>)</span>
       <span id="breakdown-toggle-icon">▼</span>
@@ -712,7 +716,7 @@
           const data = docSnap.data();
           const dateStr = formatArgDate(data.timestamp);
           const deviceStr = getDeviceLabel(data.device);
-          const ubBadge = data.ub_processed ? `<span style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>` : "";
+          const ubBadge = data.ub_processed ? `<span class="admin-only" style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>` : "";
 
           const item = document.createElement("li");
           item.className = "history-item";
@@ -1061,7 +1065,7 @@
             resultDiv.innerHTML = `
                   <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO + UB</div>
                   <div style="font-size: 0.8em; margin-top: 5px;">${code}</div>
-                  <div style="margin-top:5px; font-size:12px; color:#fff; background:#9e2a2b; padding:5px; border-radius:4px;">
+                  <div class="admin-only" style="margin-top:5px; font-size:12px; color:#fff; background:#9e2a2b; padding:5px; border-radius:4px;">
                     💰 ${apiResult.total_ub.toFixed(2)} UB
                   </div>
                 `;
@@ -1801,12 +1805,14 @@
       const loginBtn = document.getElementById("btn-login");
 
       if (window.isLoggedIn) {
+        document.body.classList.add("logged-in");
         if (adminControls) adminControls.style.display = "block";
         if (loginBtn) {
           loginBtn.innerText = "� Salir";
           loginBtn.style.background = "#444";
         }
       } else {
+        document.body.classList.remove("logged-in");
         if (adminControls) adminControls.style.display = "none";
         if (loginBtn) {
           loginBtn.innerText = "🔒 Login";
