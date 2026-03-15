@@ -918,6 +918,9 @@
         const errCont = document.getElementById("error-list-container");
         if (errCont) errCont.style.display = "none";
 
+        const historyList = document.getElementById("history-list");
+        if (historyList) historyList.innerHTML = "";
+
         // Recargar datos locales y el listener de Firebase
         if (window.loadPersistedUB) window.loadPersistedUB();
         if (window.startHistoryListener) window.startHistoryListener();
@@ -1039,57 +1042,32 @@
           _historyUnsubscribe = null;
         }
 
-        if (window.currentUserKey === "RRSSRL") {
-          // Para RRSSRL, permitimos ver los actuales Y los antiguos que no tienen api_user (retrocompatibilidad)
-          const q = query(
-            collection(db, CODES_COLLECTION),
-            orderBy("timestamp", "desc"),
-            limit(10), // Limitamos un poco más para mayor velocidad en cliente
-          );
+        // Consultamos los últimos 100 registros en general y los filtramos localmente.
+        // Esto evita el error de "Firebase requires an index" al combinar where() y orderBy().
+        const q = query(
+          collection(db, CODES_COLLECTION),
+          orderBy("timestamp", "desc"),
+          limit(100),
+        );
 
-          _historyUnsubscribe = onSnapshot(q, (snapshot) => {
-            historyList.innerHTML = "";
-            let count = 0;
-            snapshot.forEach((docSnap) => {
-              if (count >= 5) return; // Solo dibujamos 5
-              const data = docSnap.data();
+        _historyUnsubscribe = onSnapshot(q, (snapshot) => {
+          historyList.innerHTML = "";
+          let count = 0;
 
-              // Mostrar si es RRSSRL, o si es un registro antiguo que NO tiene api_user
-              if (data.api_user === "RRSSRL" || !data.api_user) {
-                count++;
-                const dateStr = formatArgDate(data.timestamp);
-                const deviceStr = getDeviceLabel(data.device);
-                const ubBadge = data.ub_processed
-                  ? `<span class="admin-only" style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>`
-                  : "";
+          snapshot.forEach((docSnap) => {
+            if (count >= 5) return; // Solo dibujamos 5 para el usuario activo
 
-                const item = document.createElement("li");
-                item.className = "history-item";
-                item.innerHTML = `
-                <div class="info">
-                  <strong>${data.code}${ubBadge}</strong>
-                  <span class="time">${dateStr}</span>
-                  ${deviceStr ? `<span class="device">${deviceStr}</span>` : ""}
-                </div>
-                <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
-              `;
-                historyList.appendChild(item);
-              }
-            });
-          });
-        } else {
-          // Para otros usuarios (ej. MRODRIGUEZ), solo ven lo suyo
-          const q = query(
-            collection(db, CODES_COLLECTION),
-            where("api_user", "==", window.currentUserKey),
-            orderBy("timestamp", "desc"),
-            limit(5),
-          );
+            const data = docSnap.data();
 
-          _historyUnsubscribe = onSnapshot(q, (snapshot) => {
-            historyList.innerHTML = "";
-            snapshot.forEach((docSnap) => {
-              const data = docSnap.data();
+            let belongsToUser = false;
+            if (window.currentUserKey === "RRSSRL") {
+              belongsToUser = data.api_user === "RRSSRL" || !data.api_user;
+            } else {
+              belongsToUser = data.api_user === window.currentUserKey;
+            }
+
+            if (belongsToUser) {
+              count++;
               const dateStr = formatArgDate(data.timestamp);
               const deviceStr = getDeviceLabel(data.device);
               const ubBadge = data.ub_processed
@@ -1099,17 +1077,17 @@
               const item = document.createElement("li");
               item.className = "history-item";
               item.innerHTML = `
-              <div class="info">
-                <strong>${data.code}${ubBadge}</strong>
-                <span class="time">${dateStr}</span>
-                ${deviceStr ? `<span class="device">${deviceStr}</span>` : ""}
-              </div>
-              <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
-            `;
+                <div class="info">
+                  <strong>${data.code}${ubBadge}</strong>
+                  <span class="time">${dateStr}</span>
+                  ${deviceStr ? `<span class="device">${deviceStr}</span>` : ""}
+                </div>
+                <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
+              `;
               historyList.appendChild(item);
-            });
+            }
           });
-        }
+        });
       };
 
       window.deleteCode = function (docId) {
