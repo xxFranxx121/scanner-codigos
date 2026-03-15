@@ -361,6 +361,22 @@
           🔴 Desconectado
         </div>
         <div style="font-size: 10px; color: #ccc">API UBS Railway</div>
+        <div style="margin-top: 5px">
+          <select
+            id="api-user-select"
+            onchange="window.onUserChanged()"
+            style="
+              font-size: 11px;
+              padding: 2px;
+              border-radius: 4px;
+              border: 1px solid #ccc;
+              background: #fff;
+            "
+          >
+            <option value="RRSSRL">RRSS</option>
+            <option value="MRODRIGUEZ">MRODRIGUEZ</option>
+          </select>
+        </div>
       </div>
 
       <div
@@ -861,6 +877,36 @@
         a.click();
         URL.revokeObjectURL(url);
       }
+
+      // --- MULTI-USER SYSTEM ---
+      const API_USERS_CREDS = {
+        RRSSRL: { user: "RRSSRL", pass: "30717143503" },
+        MRODRIGUEZ: { user: "MRODRIGUEZ", pass: "25168288" },
+      };
+
+      window.currentUserKey =
+        localStorage.getItem("selectedApiUser") || "RRSSRL";
+
+      // Initialize select value
+      window.addEventListener("DOMContentLoaded", () => {
+        const select = document.getElementById("api-user-select");
+        if (select) select.value = window.currentUserKey;
+      });
+
+      window.onUserChanged = function () {
+        const select = document.getElementById("api-user-select");
+        window.currentUserKey = select.value;
+        localStorage.setItem("selectedApiUser", window.currentUserKey);
+
+        // Desconectar si estaba conectado
+        if (window.apiSessionActive && window.toggleApiSession) {
+          window.toggleApiSession();
+        }
+
+        // Recargar datos locales y el listener de Firebase
+        if (window.loadPersistedUB) window.loadPersistedUB();
+        if (window.startHistoryListener) window.startHistoryListener();
+      };
     </script>
 
     <!-- 1. SCRIPT DE BASE DE DATOS (FIREBASE) -->
@@ -908,7 +954,7 @@
       }
 
       // --- LOAD PERSISTED UB ON PAGE LOAD ---
-      async function loadPersistedUB() {
+      window.loadPersistedUB = async function () {
         try {
           const allCodes = await window.getAllCodes();
           let total = 0;
@@ -939,7 +985,7 @@
         } catch (e) {
           console.error("Error cargando UB persistidas:", e);
         }
-      }
+      };
 
       // --- HISTORY LISTENER ---
       function formatArgDate(timestamp) {
@@ -969,40 +1015,89 @@
         return "🌐 Otro";
       }
 
-      function startHistoryListener() {
+      let _historyUnsubscribe = null;
+
+      window.startHistoryListener = function () {
         const historyList = document.getElementById("history-list");
         if (!historyList) return;
 
-        const q = query(
-          collection(db, CODES_COLLECTION),
-          orderBy("timestamp", "desc"),
-          limit(5),
-        );
+        if (_historyUnsubscribe) {
+          _historyUnsubscribe();
+          _historyUnsubscribe = null;
+        }
 
-        onSnapshot(q, (snapshot) => {
-          historyList.innerHTML = "";
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data();
-            const dateStr = formatArgDate(data.timestamp);
-            const deviceStr = getDeviceLabel(data.device);
-            const ubBadge = data.ub_processed
-              ? `<span class="admin-only" style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>`
-              : "";
+        if (window.currentUserKey === "RRSSRL") {
+          // Para RRSSRL, permitimos ver los actuales Y los antiguos que no tienen api_user (retrocompatibilidad)
+          const q = query(
+            collection(db, CODES_COLLECTION),
+            orderBy("timestamp", "desc"),
+            limit(10), // Limitamos un poco más para mayor velocidad en cliente
+          );
 
-            const item = document.createElement("li");
-            item.className = "history-item";
-            item.innerHTML = `
-            <div class="info">
-              <strong>${data.code}${ubBadge}</strong>
-              <span class="time">${dateStr}</span>
-              ${deviceStr ? `<span class="device">${deviceStr}</span>` : ""}
-            </div>
-            <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
-          `;
-            historyList.appendChild(item);
+          _historyUnsubscribe = onSnapshot(q, (snapshot) => {
+            historyList.innerHTML = "";
+            let count = 0;
+            snapshot.forEach((docSnap) => {
+              if (count >= 5) return; // Solo dibujamos 5
+              const data = docSnap.data();
+
+              // Mostrar si es RRSSRL, o si es un registro antiguo que NO tiene api_user
+              if (data.api_user === "RRSSRL" || !data.api_user) {
+                count++;
+                const dateStr = formatArgDate(data.timestamp);
+                const deviceStr = getDeviceLabel(data.device);
+                const ubBadge = data.ub_processed
+                  ? `<span class="admin-only" style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>`
+                  : "";
+
+                const item = document.createElement("li");
+                item.className = "history-item";
+                item.innerHTML = `
+                <div class="info">
+                  <strong>${data.code}${ubBadge}</strong>
+                  <span class="time">${dateStr}</span>
+                  ${deviceStr ? `<span class="device">${deviceStr}</span>` : ""}
+                </div>
+                <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
+              `;
+                historyList.appendChild(item);
+              }
+            });
           });
-        });
-      }
+        } else {
+          // Para otros usuarios (ej. MRODRIGUEZ), solo ven lo suyo
+          const q = query(
+            collection(db, CODES_COLLECTION),
+            where("api_user", "==", window.currentUserKey),
+            orderBy("timestamp", "desc"),
+            limit(5),
+          );
+
+          _historyUnsubscribe = onSnapshot(q, (snapshot) => {
+            historyList.innerHTML = "";
+            snapshot.forEach((docSnap) => {
+              const data = docSnap.data();
+              const dateStr = formatArgDate(data.timestamp);
+              const deviceStr = getDeviceLabel(data.device);
+              const ubBadge = data.ub_processed
+                ? `<span class="admin-only" style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>`
+                : "";
+
+              const item = document.createElement("li");
+              item.className = "history-item";
+              item.innerHTML = `
+              <div class="info">
+                <strong>${data.code}${ubBadge}</strong>
+                <span class="time">${dateStr}</span>
+                ${deviceStr ? `<span class="device">${deviceStr}</span>` : ""}
+              </div>
+              <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
+            `;
+              historyList.appendChild(item);
+            });
+          });
+        }
+      };
 
       window.deleteCode = function (docId) {
         if (window.openDeleteModal) {
@@ -1026,7 +1121,6 @@
           const q = query(
             collection(db, CODES_COLLECTION),
             where("code", "==", nai),
-            limit(1),
           );
           const snap = await getDocs(q);
 
@@ -1035,8 +1129,24 @@
             return;
           }
 
-          const docSnap = snap.docs[0];
-          window.openDeleteModal(docSnap.id);
+          // Buscar el doc id que nos pertenece a este usuario
+          let docIdToDelete = null;
+          snap.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (
+              data.api_user === window.currentUserKey ||
+              (!data.api_user && window.currentUserKey === "RRSSRL")
+            ) {
+              docIdToDelete = docSnap.id;
+            }
+          });
+
+          if (!docIdToDelete) {
+            alert("El NAI " + nai + " no pertenece a este usuario.");
+            return;
+          }
+
+          window.openDeleteModal(docIdToDelete);
         } catch (e) {
           console.error("Error manual delete:", e);
           alert("Error buscando NAI: " + e.message);
@@ -1150,13 +1260,19 @@
 
           const updates = [];
           snapshot.forEach((docSnap) => {
-            updates.push(
-              updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
-                ub_processed: false,
-                ub_value: 0,
-                ub_paciente: "",
-              }),
-            );
+            const data = docSnap.data();
+            if (
+              data.api_user === window.currentUserKey ||
+              (!data.api_user && window.currentUserKey === "RRSSRL")
+            ) {
+              updates.push(
+                updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
+                  ub_processed: false,
+                  ub_value: 0,
+                  ub_paciente: "",
+                }),
+              );
+            }
           });
 
           await Promise.all(updates);
@@ -1205,7 +1321,13 @@
 
           const deletes = [];
           snapshot.forEach((docSnap) => {
-            deletes.push(deleteDoc(doc(db, CODES_COLLECTION, docSnap.id)));
+            const data = docSnap.data();
+            if (
+              data.api_user === window.currentUserKey ||
+              (!data.api_user && window.currentUserKey === "RRSSRL")
+            ) {
+              deletes.push(deleteDoc(doc(db, CODES_COLLECTION, docSnap.id)));
+            }
           });
 
           await Promise.all(deletes);
@@ -1302,7 +1424,11 @@
 
         try {
           const codesRef = collection(db, CODES_COLLECTION);
-          const q = query(codesRef, where("code", "==", code));
+          const q = query(
+            codesRef,
+            where("code", "==", code),
+            where("api_user", "==", window.currentUserKey),
+          );
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
@@ -1318,6 +1444,7 @@
 
           // Guardar
           await addDoc(codesRef, {
+            api_user: window.currentUserKey,
             code: code,
             timestamp: serverTimestamp(),
             device: navigator.userAgent,
@@ -1378,6 +1505,7 @@
       window.getAllCodes = async function () {
         if (!db) return [];
         try {
+          // Obtenemos todos los registros para aplicar lógica de retrocompatibilidad.
           const q = query(
             collection(db, CODES_COLLECTION),
             orderBy("timestamp", "desc"),
@@ -1387,6 +1515,18 @@
 
           snapshot.forEach((docSnap) => {
             const data = docSnap.data();
+
+            // Validar si pertenece al usuario activo.
+            // Si el registro NO tiene api_user, se considera legado y pertenece a RRSSRL (usuario primario).
+            let belongsToUser = false;
+            if (data.api_user) {
+              belongsToUser = data.api_user === window.currentUserKey;
+            } else {
+              belongsToUser = window.currentUserKey === "RRSSRL";
+            }
+
+            if (!belongsToUser) return;
+
             const code = data.code;
 
             // Si el código ya está, y el nuevo NO está procesado, ignorar.
@@ -1427,8 +1567,16 @@
           );
           const snapshot = await getDocs(q);
           snapshot.forEach(async (docSnap) => {
+            const data = docSnap.data();
+
+            // Si el registro no nos pertenece (y no es legado válido para nosotros), no actualizarlo.
+            if (data.api_user && data.api_user !== window.currentUserKey)
+              return;
+            if (!data.api_user && window.currentUserKey !== "RRSSRL") return;
+
             await updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
               ub_processed: true,
+              api_user: window.currentUserKey, // Asignar al propietario actual (migración implícita si estaba sin dueño)
               ub_value: ubVal,
               ub_paciente: paciente || "",
             });
@@ -1442,8 +1590,6 @@
     <!-- 1.5 SCRIPT API UBS INTEGRATION -->
     <script>
       const TARGET_API = "https://api-ubs-production.up.railway.app";
-      const API_USER = "RRSSRL";
-      const API_PASS = "30717143503";
 
       function apiLog(msg) {
         console.log("[API DEBUG]", msg);
@@ -1736,9 +1882,17 @@
             const today = new Date();
             const startYear = today.getFullYear();
 
+            const apiCreds = API_USERS_CREDS[window.currentUserKey];
+            if (!apiCreds) {
+              throw new Error(
+                "Credenciales de usuario no encontradas para " +
+                  window.currentUserKey,
+              );
+            }
+
             const payload = {
-              user: API_USER,
-              password: API_PASS,
+              user: apiCreds.user,
+              password: apiCreds.pass,
               fecha_desde: `01/01/${startYear}`,
               fecha_hasta: `31/12/${startYear}`,
               headless: true,
