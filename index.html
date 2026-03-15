@@ -1,726 +1,997 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Facturacion Optimi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#9e2a2b" />
 
-<head>
-  <meta charset="UTF-8" />
-  <title>Facturacion Optimi</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#9e2a2b">
+    <!-- Librería -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
 
-  <!-- Librería -->
-  <script src="https://unpkg.com/html5-qrcode"></script>
-
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f4f9;
-      color: #333;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-    }
-
-    h1 {
-      margin-bottom: 5px;
-      color: #9e2a2b;
-      font-size: 28px;
-      font-weight: 700;
-    }
-
-    .subtitle {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 20px;
-    }
-
-    #reader {
-      width: 100%;
-      max-width: 400px;
-      margin: 0 auto 20px auto;
-      border: 4px solid #9e2a2b;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 10px rgba(158, 42, 43, 0.2);
-    }
-
-    #result {
-      margin-top: 20px;
-      font-size: 18px;
-      background: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      word-break: break-all;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      border-left: 5px solid #9e2a2b;
-    }
-
-    #history-container {
-      max-width: 400px;
-      margin: 30px auto;
-      text-align: left;
-    }
-
-    h3 {
-      border-bottom: 2px solid #e0e0e0;
-      padding-bottom: 10px;
-      color: #444;
-      font-size: 16px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .history-item {
-      background: #fff;
-      margin-bottom: 8px;
-      padding: 12px;
-      border-radius: 6px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-left: 4px solid #9e2a2b;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      transition: transform 0.1s;
-    }
-
-    .history-item:active {
-      transform: scale(0.98);
-    }
-
-    .history-item .info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .history-item strong {
-      color: #222;
-      font-size: 16px;
-    }
-
-    .history-item .time {
-      font-size: 0.75em;
-      color: #888;
-      margin-top: 2px;
-    }
-
-    .history-item .device {
-      font-size: 0.68em;
-      color: #aaa;
-      margin-top: 1px;
-    }
-
-    /* Input manual wrapper */
-    .manual-input-wrapper {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin: 10px auto;
-      max-width: 320px;
-    }
-
-    #manual-nai,
-    #manual-delete-nai {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 16px;
-      width: 100%;
-    }
-
-    .btn-manual {
-      padding: 10px 15px;
-      background: #444;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .btn-delete-manual {
-      background: #9e2a2b;
-    }
-
-    /* Ocultar input delete por defecto */
-    #manual-delete-container {
-      display: none;
-      margin-top: 5px;
-    }
-
-    /* --- PROGRESS BAR --- */
-    .progress-container {
-      max-width: 400px;
-      margin: 8px auto;
-      background: rgba(0, 0, 0, 0.1);
-      border-radius: 10px;
-      height: 12px;
-      overflow: hidden;
-      display: none;
-    }
-
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #9e2a2b, #d9534f, #f0ad4e);
-      background-size: 200% 100%;
-      border-radius: 10px;
-      transition: width 0.4s ease;
-      animation: shimmer 1.5s infinite linear;
-    }
-
-    @keyframes shimmer {
-      0% {
-        background-position: 200% 0;
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f4f4f9;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+        text-align: center;
       }
 
-      100% {
-        background-position: -200% 0;
+      h1 {
+        margin-bottom: 5px;
+        color: #9e2a2b;
+        font-size: 28px;
+        font-weight: 700;
       }
-    }
 
-    /* --- LISTS (Error & Breakdown) --- */
-    .list-container {
-      max-width: 400px;
-      margin: 10px auto;
-      text-align: left;
-      display: none;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-    }
+      .subtitle {
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
 
-    .list-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      background: #f0f0f0;
-      padding: 10px 15px;
-      font-weight: bold;
-      color: #333;
-      border-bottom: 1px solid #eee;
-    }
+      #reader {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto 20px auto;
+        border: 4px solid #9e2a2b;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(158, 42, 43, 0.2);
+      }
 
-    .list-header:hover {
-      background: #e0e0e0;
-    }
+      #result {
+        margin-top: 20px;
+        font-size: 18px;
+        background: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        word-break: break-all;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid #9e2a2b;
+      }
 
-    .list-body {
-      padding: 5px 10px;
-      max-height: 200px;
-      overflow-y: auto;
-    }
+      #history-container {
+        max-width: 400px;
+        margin: 30px auto;
+        text-align: left;
+      }
 
-    .error-item,
-    .breakdown-item {
-      background: #fff;
-      margin: 4px 0;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 13px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
+      h3 {
+        border-bottom: 2px solid #e0e0e0;
+        padding-bottom: 10px;
+        color: #444;
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
 
-    .error-item {
-      border-left: 3px solid #ff6b6b;
-    }
+      .history-item {
+        background: #fff;
+        margin-bottom: 8px;
+        padding: 12px;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 4px solid #9e2a2b;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: transform 0.1s;
+      }
 
-    .error-item .error-code {
-      font-weight: bold;
-      color: #cc0000;
-    }
+      .history-item:active {
+        transform: scale(0.98);
+      }
 
-    .error-item .error-msg {
-      font-size: 11px;
-      color: #888;
-    }
+      .history-item .info {
+        display: flex;
+        flex-direction: column;
+      }
 
-    .breakdown-item {
-      border-left: 3px solid #28a745;
-    }
+      .history-item strong {
+        color: #222;
+        font-size: 16px;
+      }
 
-    .breakdown-item .ub-val {
-      font-weight: bold;
-      color: #28a745;
-    }
+      .history-item .time {
+        font-size: 0.75em;
+        color: #888;
+        margin-top: 2px;
+      }
 
-    /* --- TOOLBAR --- */
-    .toolbar {
-      max-width: 400px;
-      margin: 10px auto;
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-    }
+      .history-item .device {
+        font-size: 0.68em;
+        color: #aaa;
+        margin-top: 1px;
+      }
 
-    .toolbar button {
-      padding: 8px 14px;
-      border: 1px solid #ddd;
-      border-radius: 20px;
-      background: white;
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: all 0.2s;
-    }
+      /* Input manual wrapper */
+      .manual-input-wrapper {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 10px auto;
+        max-width: 320px;
+      }
 
-    .toolbar button:hover {
-      background: #f5f5f5;
-      border-color: #9e2a2b;
-      color: #9e2a2b;
-    }
+      #manual-nai,
+      #manual-delete-nai {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        width: 100%;
+      }
 
-    .toolbar button.active {
-      background: #9e2a2b;
-      color: white;
-      border-color: #9e2a2b;
-    }
+      .btn-manual {
+        padding: 10px 15px;
+        background: #444;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+      }
 
-    body:not(.logged-in) .admin-only {
-      display: none !important;
-    }
-  </style>
-</head>
+      .btn-delete-manual {
+        background: #9e2a2b;
+      }
 
-<body>
+      /* Ocultar input delete por defecto */
+      #manual-delete-container {
+        display: none;
+        margin-top: 5px;
+      }
 
-  <h1>FACTURACION OPTIMI</h1>
-  <p class="subtitle">Laboratorio de Análisis Banda</p>
+      /* --- PROGRESS BAR --- */
+      .progress-container {
+        max-width: 400px;
+        margin: 8px auto;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        height: 12px;
+        overflow: hidden;
+        display: none;
+      }
 
-  <button id="btn-login" onclick="toggleLogin()"
-    style="position:absolute; top:20px; right:20px; background:#9e2a2b; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">🔒
-    Login</button>
+      .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #9e2a2b, #d9534f, #f0ad4e);
+        background-size: 200% 100%;
+        border-radius: 10px;
+        transition: width 0.4s ease;
+        animation: shimmer 1.5s infinite linear;
+      }
 
-  <div id="admin-controls" style="display:none;">
-    <div style="text-align: right; margin-bottom: 5px; max-width: 400px; margin-left: auto; margin-right: auto; padding-top: 10px;">
-      <button onclick="window.initiateDeleteAllDb()" style="background:#cc0000; color:white; border:none; padding:8px 12px; border-radius:4px; font-size:12px; cursor:pointer; font-weight:bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-        🚨 Limpiar Base de Datos (Eliminar Todos)
-      </button>
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+
+        100% {
+          background-position: -200% 0;
+        }
+      }
+
+      /* --- LISTS (Error & Breakdown) --- */
+      .list-container {
+        max-width: 400px;
+        margin: 10px auto;
+        text-align: left;
+        display: none;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        background: #f0f0f0;
+        padding: 10px 15px;
+        font-weight: bold;
+        color: #333;
+        border-bottom: 1px solid #eee;
+      }
+
+      .list-header:hover {
+        background: #e0e0e0;
+      }
+
+      .list-body {
+        padding: 5px 10px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .error-item,
+      .breakdown-item {
+        background: #fff;
+        margin: 4px 0;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 13px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .error-item {
+        border-left: 3px solid #ff6b6b;
+      }
+
+      .error-item .error-code {
+        font-weight: bold;
+        color: #cc0000;
+      }
+
+      .error-item .error-msg {
+        font-size: 11px;
+        color: #888;
+      }
+
+      .breakdown-item {
+        border-left: 3px solid #28a745;
+      }
+
+      .breakdown-item .ub-val {
+        font-weight: bold;
+        color: #28a745;
+      }
+
+      /* --- TOOLBAR --- */
+      .toolbar {
+        max-width: 400px;
+        margin: 10px auto;
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+      }
+
+      .toolbar button {
+        padding: 8px 14px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        background: white;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.2s;
+      }
+
+      .toolbar button:hover {
+        background: #f5f5f5;
+        border-color: #9e2a2b;
+        color: #9e2a2b;
+      }
+
+      .toolbar button.active {
+        background: #9e2a2b;
+        color: white;
+        border-color: #9e2a2b;
+      }
+
+      body:not(.logged-in) .admin-only {
+        display: none !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>FACTURACION OPTIMI</h1>
+    <p class="subtitle">Laboratorio de Análisis Banda</p>
+
+    <button
+      id="btn-login"
+      onclick="toggleLogin()"
+      style="
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: #9e2a2b;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+      "
+    >
+      🔒 Login
+    </button>
+
+    <div id="admin-controls" style="display: none">
+      <div
+        style="
+          text-align: right;
+          margin-bottom: 5px;
+          max-width: 400px;
+          margin-left: auto;
+          margin-right: auto;
+          padding-top: 10px;
+        "
+      >
+        <button
+          onclick="window.initiateDeleteAllDb()"
+          style="
+            background: #cc0000;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          "
+        >
+          🚨 Limpiar Base de Datos (Eliminar Todos)
+        </button>
+      </div>
     </div>
-  </div>
     <!-- API CONTROL PANEL -->
     <div
-      style="background: white; max-width: 400px; margin: 10px auto; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;">
-
-      <div style="text-align: left;">
-        <div id="api-status-indicator" style="font-size: 12px; font-weight: bold; color: #999;">🔴 Desconectado</div>
-        <div style="font-size: 10px; color: #ccc;">API UBS Railway</div>
-        <label
-          style="font-size: 9px; color: #666; display: flex; align-items: center; gap: 3px; cursor: pointer; margin-top: 3px;">
-          <input type="checkbox" id="chk-direct-mode" style="margin:0;"> Modo Directo (Requiere Extensión)
-        </label>
+      style="
+        background: white;
+        max-width: 400px;
+        margin: 10px auto;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      "
+    >
+      <div style="text-align: left">
+        <div
+          id="api-status-indicator"
+          style="font-size: 12px; font-weight: bold; color: #999"
+        >
+          🔴 Desconectado
+        </div>
+        <div style="font-size: 10px; color: #ccc">API UBS Railway</div>
       </div>
 
-      <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end;">
-        <select id="sel-api-channel" style="font-size:10px; padding:2px; border-radius:4px; border:1px solid #ccc;">
-          <option value="proxy1">Canal 1 (Proxy)</option>
-          <option value="proxy2">Canal 2 (Proxy)</option>
-          <option value="direct">Modo Directo (Extensión)</option>
-        </select>
-        <div style="display:flex; gap:5px;">
-          <button id="btn-reset-session" onclick="forceResetSession()" title="Resetear sesión API"
-            style="background: #f0f0f0; border: 1px solid #ddd; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer;">
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+          align-items: flex-end;
+        "
+      >
+        <div style="display: flex; gap: 5px">
+          <button
+            id="btn-reset-session"
+            onclick="forceResetSession()"
+            title="Resetear sesión API"
+            style="
+              background: #f0f0f0;
+              border: 1px solid #ddd;
+              padding: 8px;
+              border-radius: 50%;
+              width: 32px;
+              height: 32px;
+              display: none;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+            "
+          >
             🔄
           </button>
-          <button id="btn-reset-all" onclick="window.initiateResetAll()"
+          <button
+            id="btn-reset-all"
+            onclick="window.initiateResetAll()"
             title="Resetear TODOS los procesados (Volver a 0)"
-            style="background: #fff0f0; border: 1px solid #ffcccc; padding: 8px; border-radius: 50%; width: 32px; height: 32px; display: none; align-items: center; justify-content: center; cursor: pointer; color: #cc0000;">
+            style="
+              background: #fff0f0;
+              border: 1px solid #ffcccc;
+              padding: 8px;
+              border-radius: 50%;
+              width: 32px;
+              height: 32px;
+              display: none;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              color: #cc0000;
+            "
+          >
             🧨
           </button>
-          <button id="btn-connect" onclick="toggleApiSession()"
-            style="background: #9e2a2b; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+          <button
+            id="btn-connect"
+            onclick="toggleApiSession()"
+            style="
+              background: #9e2a2b;
+              color: white;
+              border: none;
+              padding: 8px 15px;
+              border-radius: 20px;
+              font-size: 12px;
+              font-weight: bold;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              gap: 5px;
+            "
+          >
             <span id="btn-connect-text">Conectar</span>
           </button>
         </div>
       </div>
     </div>
 
-    <div id="api-debug-log"
-      style="display:none; max-width:400px; margin: 5px auto; font-family:monospace; font-size:9px; text-align:left; background:#1e1e1e; color:#0f0; padding:10px; border-radius:5px; max-height:100px; overflow-y:auto; border: 2px solid #333;">
+    <div
+      id="api-debug-log"
+      style="
+        display: none;
+        max-width: 400px;
+        margin: 5px auto;
+        font-family: monospace;
+        font-size: 9px;
+        text-align: left;
+        background: #1e1e1e;
+        color: #0f0;
+        padding: 10px;
+        border-radius: 5px;
+        max-height: 100px;
+        overflow-y: auto;
+        border: 2px solid #333;
+      "
+    >
       [API DEBUG LOG]
     </div>
 
     <!-- TOTAL UB DISPLAY -->
-    <div id="ub-display" class="admin-only" style="display: none; max-width: 400px; margin: 0 auto 10px auto;">
-      <div
-        style="background: linear-gradient(135deg, #9e2a2b 0%, #d9534f 100%); color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(158, 42, 43, 0.3);">
-        <div style="font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;">Total Unidades
-          Bioquímicas</div>
-        <div style="font-size: 36px; font-weight: 800; margin: 5px 0;">
-          <span id="total-ub-value">0.00</span> <span style="font-size: 16px; font-weight: 400;">UB</span>
-        </div>
-        <div id="last-ub-detail"
-          style="font-size: 11px; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; display:none;">
-        </div>
-      </div>
-    </div>
-
-  <!-- PROGRESS BAR -->
-  <div id="progress-container" class="progress-container">
-    <div id="progress-bar" class="progress-bar"></div>
-  </div>
-
-  <!-- TOOLBAR (Sound, Export) -->
-  <div class="toolbar" id="toolbar" style="display:none;">
-    <button id="btn-sound" onclick="toggleSound()">🔊 Sonido</button>
-    <button id="btn-export" onclick="exportCSV()">📤 Exportar CSV</button>
-  </div>
-
-  <div id="reader"></div>
-
-  <div id="result">
-    <span style="color:#777">Esperando escaneo...</span>
-  </div>
-
-  <!-- MANUAL INPUT -->
-  <div class="manual-input-wrapper">
-    <input type="text" id="manual-nai" placeholder="Ingresar NAI manual">
-    <button class="btn-manual" onclick="handleManualNai()" title="Agregar">+</button>
-    <button class="btn-manual" style="background:#9e2a2b; color:white;" onclick="window.initiateManualDelete()"
-      title="Eliminar">🗑️</button>
-  </div>
-
-  <div id="debug-log"
-    style="display:none; color:red; font-size:12px; margin-top:20px; text-align:left; background:#ffeded; padding:10px; border:1px solid red;">
-  </div>
-
-  <!-- LISTAS DE ERRORES Y DESGLOSE -->
-  <div class="list-container" id="error-list-container" style="display:none; border-left: 5px solid #ff4444;">
-    <div class="list-header" onclick="toggleErrorList()">
-      <span>⚠️ Errores (<span id="error-count">0</span>)</span>
-      <span id="error-toggle-icon">▼</span>
-    </div>
-    <div id="error-list-body" class="list-body">
-      <!-- Error Items -->
-    </div>
-    <div style="padding:10px; text-align:right;">
-      <button id="btn-retry" onclick="retryFailedNAIs()"
-        style="padding:5px 10px; background:#444; color:white; border:none; border-radius:4px; cursor:pointer;">🔄
-        Reintentar Todos</button>
-    </div>
-  </div>
-
-  <div class="list-container admin-only" id="breakdown-container" style="display:none; border-left: 5px solid #00AAFF;">
-    <div class="list-header" onclick="toggleBreakdown()">
-      <span>📋 Desglose (<span id="breakdown-count">0</span>)</span>
-      <span id="breakdown-toggle-icon">▼</span>
-    </div>
-    <div id="breakdown-body" class="list-body">
-      <!-- Items -->
-    </div>
-  </div>
-
-  <div id="history-container">
-    <h3>🕒 Historial de Muestras</h3>
-    <ul id="history-list" style="list-style: none; padding: 0;">
-      <li style="color: #999; font-style: italic; text-align:center;">Cargando...</li>
-    </ul>
-  </div>
-
-  <p class="hint">
-    ✔ Mantenga el código horizontal y con buena luz.<br>
-    ✔ Sistema optimizado para Códigos 39.
-  </p>
-
-  <script>
-    async function handleManualNai() {
-      const input = document.getElementById("manual-nai");
-      const code = input.value.trim().toUpperCase();
-
-      if (!code) {
-        alert("Por favor, ingrese un código NAI.");
-        return;
-      }
-
-      // Limpiar input
-      input.value = "";
-
-      // Procesar usando la lógica existente
-      if (window.checkAndSaveCode) {
-        window.checkAndSaveCode(code);
-      } else {
-        alert("Base de datos no cargada aún.");
-      }
-    }
-
-    // Permitir Enter en el input (Default to Add)
-    document.getElementById("manual-nai")?.addEventListener("keypress", function (e) {
-      if (e.key === "Enter") {
-        handleManualNai();
-      }
-    });
-  </script>
-
-  <div id="auth-modal"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div
-      style="background:white; padding:25px; border-radius:12px; width:85%; max-width:320px; text-align:center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-top: 6px solid #9e2a2b;">
-      <h3 style="margin-top:0; color:#9e2a2b; border:none;">🔐 Acceso Admin</h3>
-      <p style="color:#666; font-size:14px;">Para eliminar el registro, ingrese la clave:</p>
+      id="ub-display"
+      class="admin-only"
+      style="display: none; max-width: 400px; margin: 0 auto 10px auto"
+    >
+      <div
+        style="
+          background: linear-gradient(135deg, #9e2a2b 0%, #d9534f 100%);
+          color: white;
+          padding: 15px;
+          border-radius: 12px;
+          box-shadow: 0 4px 10px rgba(158, 42, 43, 0.3);
+        "
+      >
+        <div
+          style="
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+          "
+        >
+          Total Unidades Bioquímicas
+        </div>
+        <div style="font-size: 36px; font-weight: 800; margin: 5px 0">
+          <span id="total-ub-value">0.00</span>
+          <span style="font-size: 16px; font-weight: 400">UB</span>
+        </div>
+        <div
+          id="last-ub-detail"
+          style="
+            font-size: 11px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 5px;
+            display: none;
+          "
+        ></div>
+      </div>
+    </div>
 
-      <input type="password" id="admin-pass" placeholder="Clave..."
-        style="width:100%; padding:12px; box-sizing:border-box; margin-bottom:20px; border:1px solid #ccc; border-radius:6px; font-size:18px; text-align:center;">
+    <!-- PROGRESS BAR -->
+    <div id="progress-container" class="progress-container">
+      <div id="progress-bar" class="progress-bar"></div>
+    </div>
 
-      <div style="display:flex; justify-content:space-between; gap:10px;">
-        <button onclick="closeModal()"
-          style="flex:1; background:#f0f0f0; color:#333; border:none; padding:12px; border-radius:6px; font-weight:bold; cursor:pointer;">
-          Cancelar
-        </button>
-        <button onclick="window.confirmDelete()"
-          style="flex:1; background:#9e2a2b; color:white; border:none; padding:12px; border-radius:6px; font-weight:bold; box-shadow: 0 2px 5px rgba(158,42,43,0.3); cursor:pointer;">
-          Eliminar
+    <!-- TOOLBAR (Sound, Export) -->
+    <div class="toolbar" id="toolbar" style="display: none">
+      <button id="btn-sound" onclick="toggleSound()">🔊 Sonido</button>
+      <button id="btn-export" onclick="exportCSV()">📤 Exportar CSV</button>
+    </div>
+
+    <div id="reader"></div>
+
+    <div id="result">
+      <span style="color: #777">Esperando escaneo...</span>
+    </div>
+
+    <!-- MANUAL INPUT -->
+    <div class="manual-input-wrapper">
+      <input type="text" id="manual-nai" placeholder="Ingresar NAI manual" />
+      <button class="btn-manual" onclick="handleManualNai()" title="Agregar">
+        +
+      </button>
+      <button
+        class="btn-manual"
+        style="background: #9e2a2b; color: white"
+        onclick="window.initiateManualDelete()"
+        title="Eliminar"
+      >
+        🗑️
+      </button>
+    </div>
+
+    <div
+      id="debug-log"
+      style="
+        display: none;
+        color: red;
+        font-size: 12px;
+        margin-top: 20px;
+        text-align: left;
+        background: #ffeded;
+        padding: 10px;
+        border: 1px solid red;
+      "
+    ></div>
+
+    <!-- LISTAS DE ERRORES Y DESGLOSE -->
+    <div
+      class="list-container"
+      id="error-list-container"
+      style="display: none; border-left: 5px solid #ff4444"
+    >
+      <div class="list-header" onclick="toggleErrorList()">
+        <span>⚠️ Errores (<span id="error-count">0</span>)</span>
+        <span id="error-toggle-icon">▼</span>
+      </div>
+      <div id="error-list-body" class="list-body">
+        <!-- Error Items -->
+      </div>
+      <div style="padding: 10px; text-align: right">
+        <button
+          id="btn-retry"
+          onclick="retryFailedNAIs()"
+          style="
+            padding: 5px 10px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          "
+        >
+          🔄 Reintentar Todos
         </button>
       </div>
     </div>
-  </div>
 
-  <footer>
-    Desarrollado por <b>Francisco De Cilia</b><br>
-    &copy; 2026 Laboratorio Banda
-  </footer>
+    <div
+      class="list-container admin-only"
+      id="breakdown-container"
+      style="display: none; border-left: 5px solid #00aaff"
+    >
+      <div class="list-header" onclick="toggleBreakdown()">
+        <span>📋 Desglose (<span id="breakdown-count">0</span>)</span>
+        <span id="breakdown-toggle-icon">▼</span>
+      </div>
+      <div id="breakdown-body" class="list-body">
+        <!-- Items -->
+      </div>
+    </div>
 
-  <!-- 0. MODAL SCRIPT -->
-  <script>
-    window.pendingDocId = null;
+    <div id="history-container">
+      <h3>🕒 Historial de Muestras</h3>
+      <ul id="history-list" style="list-style: none; padding: 0">
+        <li style="color: #999; font-style: italic; text-align: center">
+          Cargando...
+        </li>
+      </ul>
+    </div>
 
-    window.openDeleteModal = function (docId) {
-      window.pendingDocId = docId;
-      const modal = document.getElementById("auth-modal");
-      const input = document.getElementById("admin-pass");
+    <p class="hint">
+      ✔ Mantenga el código horizontal y con buena luz.<br />
+      ✔ Sistema optimizado para Códigos 39.
+    </p>
 
-      // Reset text for delete mode
-      const btn = modal.querySelector("button[onclick*='confirm']");
-      const title = modal.querySelector("h3");
-      const msg = modal.querySelector("p");
+    <script>
+      async function handleManualNai() {
+        const input = document.getElementById("manual-nai");
+        const code = input.value.trim().toUpperCase();
 
-      if (docId === "RESET_ALL_UBS") {
-        if (title) title.innerText = "🧨 Resetear Todo";
-        if (msg) msg.innerText = "Para volver a 0 todas las lecturas (SIN BORRAR NAIS), ingrese la clave:";
-        if (btn) btn.innerText = "RESETEAR";
-      } else if (docId === "DELETE_ALL_DB") {
-        if (title) title.innerText = "🚨 LIMPIEZA TOTAL";
-        if (msg) msg.innerText = "Para ELIMINAR TODOS LOS CÓDIGOS de la base de datos, ingrese la clave:";
-        if (btn) btn.innerText = "ELIMINAR TODO";
-      } else {
-        if (title) title.innerText = "🔐 Acceso Admin";
-        if (msg) msg.innerText = "Para eliminar el registro, ingrese la clave:";
-        if (btn) btn.innerText = "Eliminar";
+        if (!code) {
+          alert("Por favor, ingrese un código NAI.");
+          return;
+        }
+
+        // Limpiar input
+        input.value = "";
+
+        // Procesar usando la lógica existente
+        if (window.checkAndSaveCode) {
+          window.checkAndSaveCode(code);
+        } else {
+          alert("Base de datos no cargada aún.");
+        }
       }
 
-      modal.style.display = "flex";
-      input.value = "";
-      input.focus();
-    }
-
-    window.closeModal = function () {
-      document.getElementById("auth-modal").style.display = "none";
-      window.pendingDocId = null;
-    }
-
-    // --- SOUND SYSTEM ---
-    let soundEnabled = true;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    function toggleSound() {
-      soundEnabled = !soundEnabled;
-      const btn = document.getElementById("btn-sound");
-      btn.innerText = soundEnabled ? "🔊 Sonido" : "🔇 Mudo";
-      btn.classList.toggle("active", soundEnabled);
-    }
-
-    function playBeep(freq, duration, type) {
-      if (!soundEnabled) return;
-      try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.frequency.value = freq;
-        osc.type = type || "sine";
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-      } catch (e) { console.log("Audio error", e); }
-    }
-
-    function playSuccess() {
-      playBeep(880, 0.15, "sine");
-      setTimeout(() => playBeep(1320, 0.2, "sine"), 150);
-      if (navigator.vibrate) navigator.vibrate(100);
-    }
-
-    function playError() {
-      playBeep(200, 0.3, "square");
-      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-    }
-
-    function playScan() {
-      playBeep(660, 0.1, "sine");
-      if (navigator.vibrate) navigator.vibrate(50);
-    }
-
-    // --- TOGGLE SECTIONS ---
-    function toggleErrorList() {
-      const body = document.getElementById("error-list-body");
-      const icon = document.getElementById("error-toggle-icon");
-      const visible = body.style.display !== "none";
-      body.style.display = visible ? "none" : "block";
-      icon.innerText = visible ? "▼" : "▲";
-    }
-
-    function toggleBreakdown() {
-      const body = document.getElementById("breakdown-body");
-      const icon = document.getElementById("breakdown-toggle-icon");
-      const visible = body.style.display !== "none";
-      body.style.display = visible ? "none" : "block";
-      icon.innerText = visible ? "▼" : "▲";
-    }
-
-    // --- EXPORT CSV ---
-    function exportCSV() {
-      const breakdownBody = document.getElementById("breakdown-body");
-      const items = breakdownBody.querySelectorAll(".breakdown-item");
-
-      if (items.length === 0) {
-        alert("No hay datos para exportar.");
-        return;
-      }
-
-      let csv = "NAI,UB,Paciente\n";
-      items.forEach(item => {
-        const code = item.dataset.code || "";
-        const ub = item.dataset.ub || "0";
-        const paciente = item.dataset.paciente || "";
-        csv += `"${code}","${ub}","${paciente}"\n`;
-      });
-
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `ub_desglose_${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-  </script>
-
-  <!-- 1. SCRIPT DE BASE DE DATOS (FIREBASE) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp, onSnapshot, orderBy, doc, deleteDoc, updateDoc, getDoc, setDoc, limit
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDjdlGGTm_bmTO9ETXIHe4VidA1k9my_nY",
-      authDomain: "code39-optimi.firebaseapp.com",
-      projectId: "code39-optimi",
-      storageBucket: "code39-optimi.firebasestorage.app",
-      messagingSenderId: "58310943950",
-      appId: "1:58310943950:web:0226916396780699365c9f"
-    };
-
-    let db;
-    let CODES_COLLECTION = "codigos_barras";
-
-    try {
-      const app = initializeApp(firebaseConfig);
-      db = getFirestore(app);
-      console.log("✅ Firebase inicializado correctamente");
-
-      startHistoryListener();
-      loadPersistedUB();
-
-    } catch (e) {
-      console.error("❌ Error inicializando Firebase:", e);
-    }
-
-    // --- LOAD PERSISTED UB ON PAGE LOAD ---
-    async function loadPersistedUB() {
-      try {
-        const allCodes = await window.getAllCodes();
-        let total = 0;
-        let processedCount = 0;
-
-        allCodes.forEach(c => {
-          if (c.ub_processed) {
-            total += parseFloat(c.ub_value || 0);
-            processedCount++;
+      // Permitir Enter en el input (Default to Add)
+      document
+        .getElementById("manual-nai")
+        ?.addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            handleManualNai();
           }
         });
+    </script>
 
-        // Set global totalUB so the API script picks up from here
-        window._persistedTotalUB = total;
-        window._persistedCount = processedCount;
+    <div
+      id="auth-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+      "
+    >
+      <div
+        style="
+          background: white;
+          padding: 25px;
+          border-radius: 12px;
+          width: 85%;
+          max-width: 320px;
+          text-align: center;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+          border-top: 6px solid #9e2a2b;
+        "
+      >
+        <h3 style="margin-top: 0; color: #9e2a2b; border: none">
+          🔐 Acceso Admin
+        </h3>
+        <p style="color: #666; font-size: 14px">
+          Para eliminar el registro, ingrese la clave:
+        </p>
 
-        const ubDisplay = document.getElementById("ub-display");
-        const ubValue = document.getElementById("total-ub-value");
-        const ubDetail = document.getElementById("last-ub-detail");
+        <input
+          type="password"
+          id="admin-pass"
+          placeholder="Clave..."
+          style="
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 18px;
+            text-align: center;
+          "
+        />
 
-        if (processedCount > 0) {
-          ubDisplay.style.display = "block";
-          ubValue.innerText = total.toFixed(2);
-          ubDetail.style.display = "block";
-          ubDetail.innerText = `📦 ${processedCount} códigos cargados de Firebase`;
-          ubDetail.style.background = "rgba(255,255,255,0.2)";
+        <div style="display: flex; justify-content: space-between; gap: 10px">
+          <button
+            onclick="closeModal()"
+            style="
+              flex: 1;
+              background: #f0f0f0;
+              color: #333;
+              border: none;
+              padding: 12px;
+              border-radius: 6px;
+              font-weight: bold;
+              cursor: pointer;
+            "
+          >
+            Cancelar
+          </button>
+          <button
+            onclick="window.confirmDelete()"
+            style="
+              flex: 1;
+              background: #9e2a2b;
+              color: white;
+              border: none;
+              padding: 12px;
+              border-radius: 6px;
+              font-weight: bold;
+              box-shadow: 0 2px 5px rgba(158, 42, 43, 0.3);
+              cursor: pointer;
+            "
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Desarrollado por <b>Francisco De Cilia</b><br />
+      &copy; 2026 Laboratorio Banda
+    </footer>
+
+    <!-- 0. MODAL SCRIPT -->
+    <script>
+      window.pendingDocId = null;
+
+      window.openDeleteModal = function (docId) {
+        window.pendingDocId = docId;
+        const modal = document.getElementById("auth-modal");
+        const input = document.getElementById("admin-pass");
+
+        // Reset text for delete mode
+        const btn = modal.querySelector("button[onclick*='confirm']");
+        const title = modal.querySelector("h3");
+        const msg = modal.querySelector("p");
+
+        if (docId === "RESET_ALL_UBS") {
+          if (title) title.innerText = "🧨 Resetear Todo";
+          if (msg)
+            msg.innerText =
+              "Para volver a 0 todas las lecturas (SIN BORRAR NAIS), ingrese la clave:";
+          if (btn) btn.innerText = "RESETEAR";
+        } else if (docId === "DELETE_ALL_DB") {
+          if (title) title.innerText = "🚨 LIMPIEZA TOTAL";
+          if (msg)
+            msg.innerText =
+              "Para ELIMINAR TODOS LOS CÓDIGOS de la base de datos, ingrese la clave:";
+          if (btn) btn.innerText = "ELIMINAR TODO";
+        } else {
+          if (title) title.innerText = "🔐 Acceso Admin";
+          if (msg)
+            msg.innerText = "Para eliminar el registro, ingrese la clave:";
+          if (btn) btn.innerText = "Eliminar";
         }
-      } catch (e) {
-        console.error("Error cargando UB persistidas:", e);
+
+        modal.style.display = "flex";
+        input.value = "";
+        input.focus();
+      };
+
+      window.closeModal = function () {
+        document.getElementById("auth-modal").style.display = "none";
+        window.pendingDocId = null;
+      };
+
+      // --- SOUND SYSTEM ---
+      let soundEnabled = true;
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      function toggleSound() {
+        soundEnabled = !soundEnabled;
+        const btn = document.getElementById("btn-sound");
+        btn.innerText = soundEnabled ? "🔊 Sonido" : "🔇 Mudo";
+        btn.classList.toggle("active", soundEnabled);
       }
-    }
 
-    // --- HISTORY LISTENER ---
-    function formatArgDate(timestamp) {
-      if (!timestamp) return "Reciente";
-      const d = new Date(timestamp.seconds * 1000);
-      return d.toLocaleString("es-AR", {
-        timeZone: "America/Argentina/Buenos_Aires",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false
-      });
-    }
+      function playBeep(freq, duration, type) {
+        if (!soundEnabled) return;
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.value = freq;
+          osc.type = type || "sine";
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioCtx.currentTime + duration,
+          );
+          osc.start();
+          osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {
+          console.log("Audio error", e);
+        }
+      }
 
-    function getDeviceLabel(ua) {
-      if (!ua) return "";
-      const u = ua.toLowerCase();
-      if (u.includes("android")) return "📱 Android";
-      if (u.includes("iphone")) return "🍎 iPhone";
-      if (u.includes("ipad")) return "🍎 iPad";
-      if (u.includes("windows")) return "🖥️ Windows";
-      if (u.includes("mac")) return "🍏 Mac";
-      if (u.includes("linux")) return "🐧 Linux";
-      return "🌐 Otro";
-    }
+      function playSuccess() {
+        playBeep(880, 0.15, "sine");
+        setTimeout(() => playBeep(1320, 0.2, "sine"), 150);
+        if (navigator.vibrate) navigator.vibrate(100);
+      }
 
-    function startHistoryListener() {
-      const historyList = document.getElementById("history-list");
-      if (!historyList) return;
+      function playError() {
+        playBeep(200, 0.3, "square");
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      }
 
-      const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"), limit(5));
+      function playScan() {
+        playBeep(660, 0.1, "sine");
+        if (navigator.vibrate) navigator.vibrate(50);
+      }
 
-      onSnapshot(q, (snapshot) => {
-        historyList.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const dateStr = formatArgDate(data.timestamp);
-          const deviceStr = getDeviceLabel(data.device);
-          const ubBadge = data.ub_processed ? `<span class="admin-only" style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>` : "";
+      // --- TOGGLE SECTIONS ---
+      function toggleErrorList() {
+        const body = document.getElementById("error-list-body");
+        const icon = document.getElementById("error-toggle-icon");
+        const visible = body.style.display !== "none";
+        body.style.display = visible ? "none" : "block";
+        icon.innerText = visible ? "▼" : "▲";
+      }
 
-          const item = document.createElement("li");
-          item.className = "history-item";
-          item.innerHTML = `
+      function toggleBreakdown() {
+        const body = document.getElementById("breakdown-body");
+        const icon = document.getElementById("breakdown-toggle-icon");
+        const visible = body.style.display !== "none";
+        body.style.display = visible ? "none" : "block";
+        icon.innerText = visible ? "▼" : "▲";
+      }
+
+      // --- EXPORT CSV ---
+      function exportCSV() {
+        const breakdownBody = document.getElementById("breakdown-body");
+        const items = breakdownBody.querySelectorAll(".breakdown-item");
+
+        if (items.length === 0) {
+          alert("No hay datos para exportar.");
+          return;
+        }
+
+        let csv = "NAI,UB,Paciente\n";
+        items.forEach((item) => {
+          const code = item.dataset.code || "";
+          const ub = item.dataset.ub || "0";
+          const paciente = item.dataset.paciente || "";
+          csv += `"${code}","${ub}","${paciente}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `ub_desglose_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    </script>
+
+    <!-- 1. SCRIPT DE BASE DE DATOS (FIREBASE) -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        query,
+        where,
+        getDocs,
+        serverTimestamp,
+        onSnapshot,
+        orderBy,
+        doc,
+        deleteDoc,
+        updateDoc,
+        getDoc,
+        setDoc,
+        limit,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDjdlGGTm_bmTO9ETXIHe4VidA1k9my_nY",
+        authDomain: "code39-optimi.firebaseapp.com",
+        projectId: "code39-optimi",
+        storageBucket: "code39-optimi.firebasestorage.app",
+        messagingSenderId: "58310943950",
+        appId: "1:58310943950:web:0226916396780699365c9f",
+      };
+
+      let db;
+      let CODES_COLLECTION = "codigos_barras";
+
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        console.log("✅ Firebase inicializado correctamente");
+
+        startHistoryListener();
+        loadPersistedUB();
+      } catch (e) {
+        console.error("❌ Error inicializando Firebase:", e);
+      }
+
+      // --- LOAD PERSISTED UB ON PAGE LOAD ---
+      async function loadPersistedUB() {
+        try {
+          const allCodes = await window.getAllCodes();
+          let total = 0;
+          let processedCount = 0;
+
+          allCodes.forEach((c) => {
+            if (c.ub_processed) {
+              total += parseFloat(c.ub_value || 0);
+              processedCount++;
+            }
+          });
+
+          // Set global totalUB so the API script picks up from here
+          window._persistedTotalUB = total;
+          window._persistedCount = processedCount;
+
+          const ubDisplay = document.getElementById("ub-display");
+          const ubValue = document.getElementById("total-ub-value");
+          const ubDetail = document.getElementById("last-ub-detail");
+
+          if (processedCount > 0) {
+            ubDisplay.style.display = "block";
+            ubValue.innerText = total.toFixed(2);
+            ubDetail.style.display = "block";
+            ubDetail.innerText = `📦 ${processedCount} códigos cargados de Firebase`;
+            ubDetail.style.background = "rgba(255,255,255,0.2)";
+          }
+        } catch (e) {
+          console.error("Error cargando UB persistidas:", e);
+        }
+      }
+
+      // --- HISTORY LISTENER ---
+      function formatArgDate(timestamp) {
+        if (!timestamp) return "Reciente";
+        const d = new Date(timestamp.seconds * 1000);
+        return d.toLocaleString("es-AR", {
+          timeZone: "America/Argentina/Buenos_Aires",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+      }
+
+      function getDeviceLabel(ua) {
+        if (!ua) return "";
+        const u = ua.toLowerCase();
+        if (u.includes("android")) return "📱 Android";
+        if (u.includes("iphone")) return "🍎 iPhone";
+        if (u.includes("ipad")) return "🍎 iPad";
+        if (u.includes("windows")) return "🖥️ Windows";
+        if (u.includes("mac")) return "🍏 Mac";
+        if (u.includes("linux")) return "🐧 Linux";
+        return "🌐 Otro";
+      }
+
+      function startHistoryListener() {
+        const historyList = document.getElementById("history-list");
+        if (!historyList) return;
+
+        const q = query(
+          collection(db, CODES_COLLECTION),
+          orderBy("timestamp", "desc"),
+          limit(5),
+        );
+
+        onSnapshot(q, (snapshot) => {
+          historyList.innerHTML = "";
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const dateStr = formatArgDate(data.timestamp);
+            const deviceStr = getDeviceLabel(data.device);
+            const ubBadge = data.ub_processed
+              ? `<span class="admin-only" style="font-size:10px; color:#28a745; margin-left:5px;">(${Number(data.ub_value || 0).toFixed(2)} UB)</span>`
+              : "";
+
+            const item = document.createElement("li");
+            item.className = "history-item";
+            item.innerHTML = `
             <div class="info">
               <strong>${data.code}${ubBadge}</strong>
               <span class="time">${dateStr}</span>
@@ -728,341 +999,353 @@
             </div>
             <button class="delete-btn" onclick="window.deleteCode('${docSnap.id}')">🗑️</button>
           `;
-          historyList.appendChild(item);
+            historyList.appendChild(item);
+          });
         });
-      });
-    }
-
-    window.deleteCode = function (docId) {
-      if (window.openDeleteModal) {
-        window.openDeleteModal(docId);
-      } else {
-        alert("Error: Modal no cargado");
       }
-    }
 
-    // --- MANUAL DELETE LOGIC ---
-    window.initiateManualDelete = async function () {
-      try {
-        const input = document.getElementById("manual-nai");
-        const nai = input.value.trim().toUpperCase();
-        if (!nai) {
-          alert("Ingresa un NAI para eliminar");
-          return;
-        }
-
-        // Find docId by NAI - Removed orderBy to avoid missing index error
-        const q = query(collection(db, CODES_COLLECTION), where("code", "==", nai), limit(1));
-        const snap = await getDocs(q);
-
-        if (snap.empty) {
-          alert("No se encontró el NAI " + nai);
-          return;
-        }
-
-        const docSnap = snap.docs[0];
-        window.openDeleteModal(docSnap.id);
-      } catch (e) {
-        console.error("Error manual delete:", e);
-        alert("Error buscando NAI: " + e.message);
-      }
-    };
-
-    window.confirmDelete = async function () {
-      const input = document.getElementById("admin-pass");
-      const password = input.value;
-
-      // 1. CHECK FOR LOGIN ACTION
-      if (window.pendingDocId === "LOGIN_ACTION") {
-        if (password === "admin") {
-          window.isLoggedIn = true;
-          if (window.updateAuthUI) window.updateAuthUI();
-          window.closeModal();
-          input.value = "";
+      window.deleteCode = function (docId) {
+        if (window.openDeleteModal) {
+          window.openDeleteModal(docId);
         } else {
-          alert("CLAVE INCORRECTA");
+          alert("Error: Modal no cargado");
+        }
+      };
+
+      // --- MANUAL DELETE LOGIC ---
+      window.initiateManualDelete = async function () {
+        try {
+          const input = document.getElementById("manual-nai");
+          const nai = input.value.trim().toUpperCase();
+          if (!nai) {
+            alert("Ingresa un NAI para eliminar");
+            return;
+          }
+
+          // Find docId by NAI - Removed orderBy to avoid missing index error
+          const q = query(
+            collection(db, CODES_COLLECTION),
+            where("code", "==", nai),
+            limit(1),
+          );
+          const snap = await getDocs(q);
+
+          if (snap.empty) {
+            alert("No se encontró el NAI " + nai);
+            return;
+          }
+
+          const docSnap = snap.docs[0];
+          window.openDeleteModal(docSnap.id);
+        } catch (e) {
+          console.error("Error manual delete:", e);
+          alert("Error buscando NAI: " + e.message);
+        }
+      };
+
+      window.confirmDelete = async function () {
+        const input = document.getElementById("admin-pass");
+        const password = input.value;
+
+        // 1. CHECK FOR LOGIN ACTION
+        if (window.pendingDocId === "LOGIN_ACTION") {
+          if (password === "admin") {
+            window.isLoggedIn = true;
+            if (window.updateAuthUI) window.updateAuthUI();
+            window.closeModal();
+            input.value = "";
+          } else {
+            alert("CLAVE INCORRECTA");
+            input.value = "";
+            input.focus();
+          }
+          return;
+        }
+
+        // 2. DELETE / RESET ACTION
+        if (password !== "borrar") {
+          alert("⛔ CLAVE INCORRECTA");
           input.value = "";
           input.focus();
+          return;
         }
-        return;
-      }
 
-      // 2. DELETE / RESET ACTION
-      if (password !== "borrar") {
-        alert("⛔ CLAVE INCORRECTA");
-        input.value = "";
-        input.focus();
-        return;
-      }
+        const docId = window.pendingDocId;
 
-      const docId = window.pendingDocId;
+        // 3. SPECIAL ACTION: RESET ALL O DELETE ALL
+        if (docId === "RESET_ALL_UBS") {
+          await window.performResetAll();
+          return;
+        }
 
-      // 3. SPECIAL ACTION: RESET ALL O DELETE ALL
-      if (docId === "RESET_ALL_UBS") {
-        await window.performResetAll();
-        return;
-      }
+        if (docId === "DELETE_ALL_DB") {
+          await window.performDeleteAllDb();
+          return;
+        }
 
-      if (docId === "DELETE_ALL_DB") {
-        await window.performDeleteAllDb();
-        return;
-      }
+        if (!docId) return;
 
-      if (!docId) return;
+        try {
+          const docRef = doc(db, CODES_COLLECTION, docId);
 
-      try {
-        const docRef = doc(db, CODES_COLLECTION, docId);
+          // 1. Get doc data to check UB
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.ub_processed && data.ub_value) {
+              const val = parseFloat(data.ub_value);
+              if (val > 0) {
+                totalUB -= val;
+                if (totalUB < 0) totalUB = 0;
 
-        // 1. Get doc data to check UB
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (data.ub_processed && data.ub_value) {
-            const val = parseFloat(data.ub_value);
-            if (val > 0) {
-              totalUB -= val;
-              if (totalUB < 0) totalUB = 0;
+                // Update UI immediately
+                const ubDisplay = document.getElementById("total-ub-value");
+                if (ubDisplay) ubDisplay.innerText = totalUB.toFixed(2);
 
-              // Update UI immediately
-              const ubDisplay = document.getElementById("total-ub-value");
-              if (ubDisplay) ubDisplay.innerText = totalUB.toFixed(2);
-
-              // console.log(`Restadas ${val} UB. Nuevo total: ${totalUB}`);
+                // console.log(`Restadas ${val} UB. Nuevo total: ${totalUB}`);
+              }
             }
           }
+
+          // 2. Delete
+          await deleteDoc(docRef);
+
+          if (window.closeModal) window.closeModal();
+
+          const resultDiv = document.getElementById("result");
+          resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
+
+          // Clear manual input if it was used
+          document.getElementById("manual-nai").value = "";
+
+          setTimeout(() => {
+            if (window.restartScanner) {
+              window.restartScanner();
+            } else {
+              resultDiv.innerHTML = "Esperando lectura...";
+            }
+          }, 1500);
+        } catch (e) {
+          console.error(e);
+          alert("Error al eliminar: " + e.message);
         }
+      };
 
-        // 2. Delete
-        await deleteDoc(docRef);
+      // --- RESET ALL LOGIC (AGREGADO) ---
+      window.initiateResetAll = function () {
+        if (window.openDeleteModal) {
+          window.openDeleteModal("RESET_ALL_UBS");
+        }
+      };
 
+      window.performResetAll = async function () {
         if (window.closeModal) window.closeModal();
 
         const resultDiv = document.getElementById("result");
-        resultDiv.innerHTML = `<span style="color:#9e2a2b; font-weight:bold;">🗑️ Registro eliminado</span>`;
+        resultDiv.innerHTML = "⏳ Reseteando lecturas...";
 
-        // Clear manual input if it was used
-        document.getElementById("manual-nai").value = "";
+        try {
+          const q = query(collection(db, CODES_COLLECTION));
+          const snapshot = await getDocs(q);
 
-        setTimeout(() => {
-          if (window.restartScanner) {
-            window.restartScanner();
-          } else {
-            resultDiv.innerHTML = "Esperando lectura...";
-          }
-        }, 1500);
+          const updates = [];
+          snapshot.forEach((docSnap) => {
+            updates.push(
+              updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
+                ub_processed: false,
+                ub_value: 0,
+                ub_paciente: "",
+              }),
+            );
+          });
 
-      } catch (e) {
-        console.error(e);
-        alert("Error al eliminar: " + e.message);
-      }
-    }
+          await Promise.all(updates);
 
-    // --- RESET ALL LOGIC (AGREGADO) ---
-    window.initiateResetAll = function () {
-      if (window.openDeleteModal) {
-        window.openDeleteModal("RESET_ALL_UBS");
-      }
-    };
+          // Reset local logic
+          totalUB = 0;
+          const ubValue = document.getElementById("total-ub-value");
+          if (ubValue) ubValue.innerText = "0.00";
 
-    window.performResetAll = async function () {
-      if (window.closeModal) window.closeModal();
+          // Clear lists
+          document.getElementById("breakdown-body").innerHTML = "";
+          document.getElementById("breakdown-count").innerText = "0";
+          document.getElementById("breakdown-container").style.display = "none";
 
-      const resultDiv = document.getElementById("result");
-      resultDiv.innerHTML = "⏳ Reseteando lecturas...";
+          // Clear error list too if any
+          document.getElementById("error-list-body").innerHTML = "";
+          document.getElementById("error-count").innerText = "0";
+          document.getElementById("error-list-container").style.display =
+            "none";
 
-      try {
-        const q = query(collection(db, CODES_COLLECTION));
-        const snapshot = await getDocs(q);
-
-        const updates = [];
-        snapshot.forEach(docSnap => {
-          updates.push(updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
-            ub_processed: false,
-            ub_value: 0,
-            ub_paciente: ""
-          }));
-        });
-
-        await Promise.all(updates);
-
-        // Reset local logic
-        totalUB = 0;
-        const ubValue = document.getElementById("total-ub-value");
-        if (ubValue) ubValue.innerText = "0.00";
-
-        // Clear lists
-        document.getElementById("breakdown-body").innerHTML = "";
-        document.getElementById("breakdown-count").innerText = "0";
-        document.getElementById("breakdown-container").style.display = "none";
-
-        // Clear error list too if any
-        document.getElementById("error-list-body").innerHTML = "";
-        document.getElementById("error-count").innerText = "0";
-        document.getElementById("error-list-container").style.display = "none";
-
-        alert("✅ Se han reseteado " + updates.length + " registros a 0 UB.");
-        resultDiv.innerHTML = "Esperando lectura...";
-
-      } catch (e) {
-        console.error("Error resetting all:", e);
-        alert("Error al resetear: " + e.message);
-        resultDiv.innerHTML = "❌ Error reset";
-      }
-    };
-
-    // --- DELETE ALL DB LOGIC (AGREGADO) ---
-    window.initiateDeleteAllDb = function () {
-      if (window.openDeleteModal) {
-        window.openDeleteModal("DELETE_ALL_DB");
-      }
-    };
-
-    window.performDeleteAllDb = async function () {
-      if (window.closeModal) window.closeModal();
-
-      const resultDiv = document.getElementById("result");
-      resultDiv.innerHTML = "⏳ Eliminando todos los registros...";
-
-      try {
-        const q = query(collection(db, CODES_COLLECTION));
-        const snapshot = await getDocs(q);
-
-        const deletes = [];
-        snapshot.forEach(docSnap => {
-          deletes.push(deleteDoc(doc(db, CODES_COLLECTION, docSnap.id)));
-        });
-
-        await Promise.all(deletes);
-
-        // Reset local logic
-        totalUB = 0;
-        const ubValue = document.getElementById("total-ub-value");
-        if (ubValue) ubValue.innerText = "0.00";
-
-        // Clear lists
-        document.getElementById("breakdown-body").innerHTML = "";
-        document.getElementById("breakdown-count").innerText = "0";
-        document.getElementById("breakdown-container").style.display = "none";
-
-        document.getElementById("error-list-body").innerHTML = "";
-        document.getElementById("error-count").innerText = "0";
-        document.getElementById("error-list-container").style.display = "none";
-
-        if(window._persistedTotalUB !== undefined) window._persistedTotalUB = 0;
-
-        alert("✅ Se han eliminado " + deletes.length + " registros de la base de datos.");
-        resultDiv.innerHTML = "Esperando lectura...";
-
-      } catch (e) {
-        console.error("Error deleting all:", e);
-        alert("Error al eliminar todo: " + e.message);
-        resultDiv.innerHTML = "❌ Error limpieza";
-      }
-    };
-
-    // --- QUEUE SYSTEM ---
-    const scanQueue = [];
-    let isQueueProcessing = false;
-
-    window.addToQueue = function (code) {
-      // Avoid duplicate pending items
-      if (scanQueue.includes(code)) return;
-
-      scanQueue.push(code);
-      updateQueueUI();
-      processQueue();
-    };
-
-    function updateQueueUI() {
-      const resultDiv = document.getElementById("result");
-      if (scanQueue.length > 0) {
-        // Show queue status if not showing a success/error result yet or if idle
-        const qStatus = document.getElementById("queue-status");
-        if (!qStatus) {
-          const status = document.createElement("div");
-          status.id = "queue-status";
-          status.style.fontSize = "10px";
-          status.style.color = "#888";
-          status.style.marginTop = "5px";
-          resultDiv.appendChild(status);
+          alert("✅ Se han reseteado " + updates.length + " registros a 0 UB.");
+          resultDiv.innerHTML = "Esperando lectura...";
+        } catch (e) {
+          console.error("Error resetting all:", e);
+          alert("Error al resetear: " + e.message);
+          resultDiv.innerHTML = "❌ Error reset";
         }
-        document.getElementById("queue-status").innerText = `En cola: ${scanQueue.length}`;
+      };
+
+      // --- DELETE ALL DB LOGIC (AGREGADO) ---
+      window.initiateDeleteAllDb = function () {
+        if (window.openDeleteModal) {
+          window.openDeleteModal("DELETE_ALL_DB");
+        }
+      };
+
+      window.performDeleteAllDb = async function () {
+        if (window.closeModal) window.closeModal();
+
+        const resultDiv = document.getElementById("result");
+        resultDiv.innerHTML = "⏳ Eliminando todos los registros...";
+
+        try {
+          const q = query(collection(db, CODES_COLLECTION));
+          const snapshot = await getDocs(q);
+
+          const deletes = [];
+          snapshot.forEach((docSnap) => {
+            deletes.push(deleteDoc(doc(db, CODES_COLLECTION, docSnap.id)));
+          });
+
+          await Promise.all(deletes);
+
+          // Reset local logic
+          totalUB = 0;
+          const ubValue = document.getElementById("total-ub-value");
+          if (ubValue) ubValue.innerText = "0.00";
+
+          // Clear lists
+          document.getElementById("breakdown-body").innerHTML = "";
+          document.getElementById("breakdown-count").innerText = "0";
+          document.getElementById("breakdown-container").style.display = "none";
+
+          document.getElementById("error-list-body").innerHTML = "";
+          document.getElementById("error-count").innerText = "0";
+          document.getElementById("error-list-container").style.display =
+            "none";
+
+          if (window._persistedTotalUB !== undefined)
+            window._persistedTotalUB = 0;
+
+          alert(
+            "✅ Se han eliminado " +
+              deletes.length +
+              " registros de la base de datos.",
+          );
+          resultDiv.innerHTML = "Esperando lectura...";
+        } catch (e) {
+          console.error("Error deleting all:", e);
+          alert("Error al eliminar todo: " + e.message);
+          resultDiv.innerHTML = "❌ Error limpieza";
+        }
+      };
+
+      // --- QUEUE SYSTEM ---
+      const scanQueue = [];
+      let isQueueProcessing = false;
+
+      window.addToQueue = function (code) {
+        // Avoid duplicate pending items
+        if (scanQueue.includes(code)) return;
+
+        scanQueue.push(code);
+        updateQueueUI();
+        processQueue();
+      };
+
+      function updateQueueUI() {
+        const resultDiv = document.getElementById("result");
+        if (scanQueue.length > 0) {
+          // Show queue status if not showing a success/error result yet or if idle
+          const qStatus = document.getElementById("queue-status");
+          if (!qStatus) {
+            const status = document.createElement("div");
+            status.id = "queue-status";
+            status.style.fontSize = "10px";
+            status.style.color = "#888";
+            status.style.marginTop = "5px";
+            resultDiv.appendChild(status);
+          }
+          document.getElementById("queue-status").innerText =
+            `En cola: ${scanQueue.length}`;
+        }
       }
-    }
 
-    async function processQueue() {
-      if (isQueueProcessing) return;
-      if (scanQueue.length === 0) return;
+      async function processQueue() {
+        if (isQueueProcessing) return;
+        if (scanQueue.length === 0) return;
 
-      isQueueProcessing = true;
-      const code = scanQueue.shift(); // FIFO
-      updateQueueUI();
+        isQueueProcessing = true;
+        const code = scanQueue.shift(); // FIFO
+        updateQueueUI();
 
-      await processSingleCode(code);
+        await processSingleCode(code);
 
-      isQueueProcessing = false;
-      // Loop
-      processQueue();
-    }
-
-    // Renamed from checkAndSaveCode -> logic extracted
-    async function processSingleCode(code) {
-      const resultDiv = document.getElementById("result");
-
-      if (!db) {
-        resultDiv.innerHTML = "⚠️ Error: No hay conexión con la base de datos.";
-        return;
+        isQueueProcessing = false;
+        // Loop
+        processQueue();
       }
 
-      // Reset UI for this item
-      resultDiv.innerHTML = `⏳ Procesando <b>${code}</b>...`;
+      // Renamed from checkAndSaveCode -> logic extracted
+      async function processSingleCode(code) {
+        const resultDiv = document.getElementById("result");
 
-      try {
-        const codesRef = collection(db, CODES_COLLECTION);
-        const q = query(codesRef, where("code", "==", code));
-        const querySnapshot = await getDocs(q);
+        if (!db) {
+          resultDiv.innerHTML =
+            "⚠️ Error: No hay conexión con la base de datos.";
+          return;
+        }
 
-        if (!querySnapshot.empty) {
-          playError();
-          resultDiv.innerHTML = `
+        // Reset UI for this item
+        resultDiv.innerHTML = `⏳ Procesando <b>${code}</b>...`;
+
+        try {
+          const codesRef = collection(db, CODES_COLLECTION);
+          const q = query(codesRef, where("code", "==", code));
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            playError();
+            resultDiv.innerHTML = `
             <div style="color: #ff4444; font-weight: bold;">⛔ ERROR: DUPLICADO</div>
             <div style="font-size: 0.8em; margin-top: 5px;">El código <b>${code}</b> ya existe.</div>
             <div style="font-size: 0.7em; color:#ccc; margin-top:5px;">Siguiente en ${scanQueue.length}...</div>
           `;
-          await sleep(1500); // Show error briefly
-          return;
-        }
+            await sleep(1500); // Show error briefly
+            return;
+          }
 
-        // Guardar
-        await addDoc(codesRef, {
-          code: code,
-          timestamp: serverTimestamp(),
-          device: navigator.userAgent,
-          ub_processed: false,
-          ub_value: 0
-        });
+          // Guardar
+          await addDoc(codesRef, {
+            code: code,
+            timestamp: serverTimestamp(),
+            device: navigator.userAgent,
+            ub_processed: false,
+            ub_value: 0,
+          });
 
-        playScan();
+          playScan();
 
-        resultDiv.innerHTML = `
+          resultDiv.innerHTML = `
           <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO</div>
           <div style="font-size: 0.8em; margin-top: 5px;">Código: <b>${code}</b></div>
         `;
 
-        // API API CHECK (Only if logged in check will be added later, for now keep logic)
-        // We act conditionally based on window.processUbApi presence which implies loaded
-        if (window.processUbApi) {
-          // Optional: visual cue we are checking API
-          const apiCue = document.createElement("div");
-          apiCue.innerText = "Busando UB...";
-          apiCue.style.fontSize = "10px";
-          resultDiv.appendChild(apiCue);
+          // API API CHECK (Only if logged in check will be added later, for now keep logic)
+          // We act conditionally based on window.processUbApi presence which implies loaded
+          if (window.processUbApi) {
+            // Optional: visual cue we are checking API
+            const apiCue = document.createElement("div");
+            apiCue.innerText = "Busando UB...";
+            apiCue.style.fontSize = "10px";
+            resultDiv.appendChild(apiCue);
 
-          const apiResult = await window.processUbApi(code);
+            const apiResult = await window.processUbApi(code);
 
-          if (apiResult && apiResult.found) {
-            playSuccess();
-            resultDiv.innerHTML = `
+            if (apiResult && apiResult.found) {
+              playSuccess();
+              resultDiv.innerHTML = `
                   <div style="color: #00ff99; font-weight: bold;">✅ GUARDADO + UB</div>
                   <div style="font-size: 0.8em; margin-top: 5px;">${code}</div>
                   <div class="admin-only" style="margin-top:5px; font-size:12px; color:#fff; background:#9e2a2b; padding:5px; border-radius:4px;">
@@ -1070,781 +1353,793 @@
                   </div>
                 `;
 
-            if (window.markCodeProcessed) {
-              window.markCodeProcessed(code, apiResult.total_ub, apiResult.paciente || "");
+              if (window.markCodeProcessed) {
+                window.markCodeProcessed(
+                  code,
+                  apiResult.total_ub,
+                  apiResult.paciente || "",
+                );
+              }
             }
           }
+
+          await sleep(1000); // Brief pause to see result before next
+        } catch (error) {
+          console.error("Error Processing:", error);
+          resultDiv.innerHTML = `❌ Error: ${error.message}`;
+          await sleep(2000);
         }
-
-        await sleep(1000); // Brief pause to see result before next
-
-      } catch (error) {
-        console.error("Error Processing:", error);
-        resultDiv.innerHTML = `❌ Error: ${error.message}`;
-        await sleep(2000);
       }
-    }
 
-    // Alias for compatibility
-    window.checkAndSaveCode = window.addToQueue;
+      // Alias for compatibility
+      window.checkAndSaveCode = window.addToQueue;
 
-    // Obtener todos los códigos (DEDUP por NAI)
-    window.getAllCodes = async function () {
-      if (!db) return [];
-      try {
-        const q = query(collection(db, CODES_COLLECTION), orderBy("timestamp", "desc"));
-        const snapshot = await getDocs(q);
-        const codeMap = new Map();
+      // Obtener todos los códigos (DEDUP por NAI)
+      window.getAllCodes = async function () {
+        if (!db) return [];
+        try {
+          const q = query(
+            collection(db, CODES_COLLECTION),
+            orderBy("timestamp", "desc"),
+          );
+          const snapshot = await getDocs(q);
+          const codeMap = new Map();
 
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          const code = data.code;
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            const code = data.code;
 
-          // Si el código ya está, y el nuevo NO está procesado, ignorar.
-          // Si el que tenemos NO está procesado pero el nuevo SI, reemplazar.
-          if (codeMap.has(code)) {
-            const existing = codeMap.get(code);
-            if (!existing.ub_processed && data.ub_processed) {
+            // Si el código ya está, y el nuevo NO está procesado, ignorar.
+            // Si el que tenemos NO está procesado pero el nuevo SI, reemplazar.
+            if (codeMap.has(code)) {
+              const existing = codeMap.get(code);
+              if (!existing.ub_processed && data.ub_processed) {
+                codeMap.set(code, {
+                  id: docSnap.id,
+                  code: code,
+                  ub_processed: true,
+                  ub_value: data.ub_value || 0,
+                });
+              }
+            } else {
               codeMap.set(code, {
                 id: docSnap.id,
                 code: code,
-                ub_processed: true,
-                ub_value: data.ub_value || 0
+                ub_processed: data.ub_processed || false,
+                ub_value: data.ub_value || 0,
               });
             }
-          } else {
-            codeMap.set(code, {
-              id: docSnap.id,
-              code: code,
-              ub_processed: data.ub_processed || false,
-              ub_value: data.ub_value || 0
-            });
-          }
-        });
-        return Array.from(codeMap.values());
-      } catch (e) {
-        console.error("Error obteniendo códigos:", e);
-        return [];
-      }
-    };
-
-    // Marcar código como procesado con su valor UB
-    window.markCodeProcessed = async function (code, ubVal, paciente) {
-      if (!db) return;
-      try {
-        const q = query(collection(db, CODES_COLLECTION), where("code", "==", code));
-        const snapshot = await getDocs(q);
-        snapshot.forEach(async (docSnap) => {
-          await updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
-            ub_processed: true,
-            ub_value: ubVal,
-            ub_paciente: paciente || ""
           });
-        });
-      } catch (e) {
-        console.error("Error marcando código procesado:", e);
-      }
-    };
-  </script>
+          return Array.from(codeMap.values());
+        } catch (e) {
+          console.error("Error obteniendo códigos:", e);
+          return [];
+        }
+      };
 
-  <!-- 1.5 SCRIPT API UBS INTEGRATION -->
-  <script>
-    const PROXY1 = "https://corsproxy.io/?";
-    const PROXY2 = "https://api.allorigins.win/get?url=";
-    const TARGET_API = "https://api-ubs-production.up.railway.app";
-    const API_USER = "RRSSRL";
-    const API_PASS = "30717143503";
+      // Marcar código como procesado con su valor UB
+      window.markCodeProcessed = async function (code, ubVal, paciente) {
+        if (!db) return;
+        try {
+          const q = query(
+            collection(db, CODES_COLLECTION),
+            where("code", "==", code),
+          );
+          const snapshot = await getDocs(q);
+          snapshot.forEach(async (docSnap) => {
+            await updateDoc(doc(db, CODES_COLLECTION, docSnap.id), {
+              ub_processed: true,
+              ub_value: ubVal,
+              ub_paciente: paciente || "",
+            });
+          });
+        } catch (e) {
+          console.error("Error marcando código procesado:", e);
+        }
+      };
+    </script>
 
-    function apiLog(msg) {
-      console.log("[API DEBUG]", msg);
-      const logArea = document.getElementById("api-debug-log");
-      logArea.style.display = "block";
-      const time = new Date().toLocaleTimeString();
-      logArea.innerHTML += `<div>[${time}] ${msg}</div>`;
-      logArea.scrollTop = logArea.scrollHeight;
-    }
+    <!-- 1.5 SCRIPT API UBS INTEGRATION -->
+    <script>
+      const TARGET_API = "https://api-ubs-production.up.railway.app";
+      const API_USER = "RRSSRL";
+      const API_PASS = "30717143503";
 
-    function getApiUrl(endpoint) {
-      const mode = document.getElementById("sel-api-channel").value;
-      const target = `${TARGET_API}${endpoint}`;
-
-      if (mode === "direct") return target;
-      if (mode === "proxy2") return PROXY2 + encodeURIComponent(target);
-      return PROXY1 + encodeURIComponent(target);
-    }
-
-    let apiSessionActive = false;
-    let totalUB = window._persistedTotalUB || 0.0;
-
-    // UI Elements
-    const btnConnect = document.getElementById("btn-connect");
-    const btnText = document.getElementById("btn-connect-text");
-    const statusInd = document.getElementById("api-status-indicator");
-    const ubDisplay = document.getElementById("ub-display");
-    const ubValue = document.getElementById("total-ub-value");
-    const ubDetail = document.getElementById("last-ub-detail");
-    const progressContainer = document.getElementById("progress-container");
-    const progressBar = document.getElementById("progress-bar");
-    const toolbar = document.getElementById("toolbar");
-    const errorListContainer = document.getElementById("error-list-container");
-    const errorListBody = document.getElementById("error-list-body");
-    const errorCount = document.getElementById("error-count");
-    const breakdownContainer = document.getElementById("breakdown-container");
-    const breakdownBody = document.getElementById("breakdown-body");
-    const breakdownCount = document.getElementById("breakdown-count");
-
-    // --- DIRECT MODE SYNC ---
-    const chkDirect = document.getElementById("chk-direct-mode");
-    const selChannel = document.getElementById("sel-api-channel");
-
-    if (chkDirect && selChannel) {
-      chkDirect.addEventListener("change", (e) => {
-        selChannel.value = e.target.checked ? "direct" : "proxy1";
-      });
-
-      selChannel.addEventListener("change", (e) => {
-        chkDirect.checked = (e.target.value === "direct");
-      });
-    }
-
-    // Initialize from persisted (with deduplication safety)
-    if (window._persistedTotalUB) {
-      totalUB = window._persistedTotalUB;
-      ubValue.innerText = totalUB.toFixed(2);
-    }
-
-    function updateApiUI(state) {
-      if (state === "connecting") {
-        btnConnect.style.background = "#ccc";
-        btnText.innerText = "Conectando...";
-        btnConnect.disabled = true;
-        document.getElementById("btn-reset-session").style.display = "none";
-      } else if (state === "connected") {
-        apiSessionActive = true;
-        btnConnect.style.background = "#444";
-        btnText.innerText = "Desconectar";
-        btnConnect.disabled = false;
-        statusInd.innerHTML = "🟢 Conectado";
-        statusInd.style.color = "#28a745";
-        ubDisplay.style.display = "block";
-        toolbar.style.display = "flex";
-        toolbar.style.display = "flex";
-        document.getElementById("btn-reset-session").style.display = "inline-flex";
-        document.getElementById("btn-reset-all").style.display = "inline-flex";
-      } else if (state === "disconnected") {
-        apiSessionActive = false;
-        btnConnect.style.background = "#9e2a2b";
-        btnText.innerText = "Conectar";
-        btnConnect.disabled = false;
-        statusInd.innerHTML = "🔴 Desconectado";
-        statusInd.style.color = "#999";
-        progressContainer.style.display = "none";
-        document.getElementById("btn-reset-session").style.display = "none";
-      }
-    }
-
-    async function forceResetSession() {
-      if (!confirm("¿Deseas resetear la sesión API? Útil si aparecen errores 400 constantes.")) return;
-      apiSessionActive = true; // Pretend it's active to trigger stop
-      await toggleApiSession(); // Stop
-      await toggleApiSession(); // Start again
-    }
-
-    function updateProgress(current, total) {
-      progressContainer.style.display = "block";
-      const pct = total > 0 ? (current / total * 100) : 0;
-      progressBar.style.width = pct + "%";
-    }
-
-    // Track failed NAI codes for retry
-    let failedNAIs = [];
-
-    function addErrorToList(code, reason) {
-      errorListContainer.style.display = "block";
-      // Avoid duplicates in the array
-      if (!failedNAIs.includes(code)) {
-        failedNAIs.push(code);
+      function apiLog(msg) {
+        console.log("[API DEBUG]", msg);
+        const logArea = document.getElementById("api-debug-log");
+        logArea.style.display = "block";
+        const time = new Date().toLocaleTimeString();
+        logArea.innerHTML += `<div>[${time}] ${msg}</div>`;
+        logArea.scrollTop = logArea.scrollHeight;
       }
 
-      // Update existing UI item or create new one
-      let item = errorListBody.querySelector(`.error-item[data-code="${code}"]`);
-      if (!item) {
-        item = document.createElement("div");
-        item.className = "error-item";
-        item.dataset.code = code;
-        errorListBody.appendChild(item);
+      function getApiUrl(endpoint) {
+        return `${TARGET_API}${endpoint}`;
       }
 
-      let reasonStr = "";
-      if (typeof reason === "object" && reason !== null) {
-        reasonStr = reason.message || reason.error || JSON.stringify(reason);
-      } else {
-        reasonStr = String(reason || "");
-      }
-      const isTimeout = reasonStr.toLowerCase().includes("timeout") || reasonStr.includes("504") || reasonStr.includes("502");
-      const displayReason = isTimeout ? "⚠️ Posible Timeout de Proxy (30s+)" : reasonStr;
+      let apiSessionActive = false;
+      let totalUB = window._persistedTotalUB || 0.0;
 
-      item.innerHTML = `
+      // UI Elements
+      const btnConnect = document.getElementById("btn-connect");
+      const btnText = document.getElementById("btn-connect-text");
+      const statusInd = document.getElementById("api-status-indicator");
+      const ubDisplay = document.getElementById("ub-display");
+      const ubValue = document.getElementById("total-ub-value");
+      const ubDetail = document.getElementById("last-ub-detail");
+      const progressContainer = document.getElementById("progress-container");
+      const progressBar = document.getElementById("progress-bar");
+      const toolbar = document.getElementById("toolbar");
+      const errorListContainer = document.getElementById(
+        "error-list-container",
+      );
+      const errorListBody = document.getElementById("error-list-body");
+      const errorCount = document.getElementById("error-count");
+      const breakdownContainer = document.getElementById("breakdown-container");
+      const breakdownBody = document.getElementById("breakdown-body");
+      const breakdownCount = document.getElementById("breakdown-count");
+
+      // Direct connection is always used now since CORS is fixed on the backend.
+
+      // Initialize from persisted (with deduplication safety)
+      if (window._persistedTotalUB) {
+        totalUB = window._persistedTotalUB;
+        ubValue.innerText = totalUB.toFixed(2);
+      }
+
+      function updateApiUI(state) {
+        if (state === "connecting") {
+          btnConnect.style.background = "#ccc";
+          btnText.innerText = "Conectando...";
+          btnConnect.disabled = true;
+          document.getElementById("btn-reset-session").style.display = "none";
+        } else if (state === "connected") {
+          apiSessionActive = true;
+          btnConnect.style.background = "#444";
+          btnText.innerText = "Desconectar";
+          btnConnect.disabled = false;
+          statusInd.innerHTML = "🟢 Conectado";
+          statusInd.style.color = "#28a745";
+          ubDisplay.style.display = "block";
+          toolbar.style.display = "flex";
+          toolbar.style.display = "flex";
+          document.getElementById("btn-reset-session").style.display =
+            "inline-flex";
+          document.getElementById("btn-reset-all").style.display =
+            "inline-flex";
+        } else if (state === "disconnected") {
+          apiSessionActive = false;
+          btnConnect.style.background = "#9e2a2b";
+          btnText.innerText = "Conectar";
+          btnConnect.disabled = false;
+          statusInd.innerHTML = "🔴 Desconectado";
+          statusInd.style.color = "#999";
+          progressContainer.style.display = "none";
+          document.getElementById("btn-reset-session").style.display = "none";
+        }
+      }
+
+      async function forceResetSession() {
+        if (
+          !confirm(
+            "¿Deseas resetear la sesión API? Útil si aparecen errores 400 constantes.",
+          )
+        )
+          return;
+        apiSessionActive = true; // Pretend it's active to trigger stop
+        await toggleApiSession(); // Stop
+        await toggleApiSession(); // Start again
+      }
+
+      function updateProgress(current, total) {
+        progressContainer.style.display = "block";
+        const pct = total > 0 ? (current / total) * 100 : 0;
+        progressBar.style.width = pct + "%";
+      }
+
+      // Track failed NAI codes for retry
+      let failedNAIs = [];
+
+      function addErrorToList(code, reason) {
+        errorListContainer.style.display = "block";
+        // Avoid duplicates in the array
+        if (!failedNAIs.includes(code)) {
+          failedNAIs.push(code);
+        }
+
+        // Update existing UI item or create new one
+        let item = errorListBody.querySelector(
+          `.error-item[data-code="${code}"]`,
+        );
+        if (!item) {
+          item = document.createElement("div");
+          item.className = "error-item";
+          item.dataset.code = code;
+          errorListBody.appendChild(item);
+        }
+
+        let reasonStr = "";
+        if (typeof reason === "object" && reason !== null) {
+          reasonStr = reason.message || reason.error || JSON.stringify(reason);
+        } else {
+          reasonStr = String(reason || "");
+        }
+        const isTimeout =
+          reasonStr.toLowerCase().includes("timeout") ||
+          reasonStr.includes("504") ||
+          reasonStr.includes("502");
+        const displayReason = isTimeout
+          ? "⚠️ Posible Timeout de API (30s+)"
+          : reasonStr;
+
+        item.innerHTML = `
         <span class="error-code">${code}</span>
         <span class="error-msg">${displayReason}</span>
       `;
 
-      const count = errorListBody.querySelectorAll(".error-item").length;
-      errorCount.innerText = count;
-    }
+        const count = errorListBody.querySelectorAll(".error-item").length;
+        errorCount.innerText = count;
+      }
 
-    function removeErrorFromList(code) {
-      const items = errorListBody.querySelectorAll(".error-item");
-      items.forEach(item => {
-        if (item.dataset.code === code) {
-          item.remove();
+      function removeErrorFromList(code) {
+        const items = errorListBody.querySelectorAll(".error-item");
+        items.forEach((item) => {
+          if (item.dataset.code === code) {
+            item.remove();
+          }
+        });
+        failedNAIs = failedNAIs.filter((c) => c !== code);
+        const count = errorListBody.querySelectorAll(".error-item").length;
+        errorCount.innerText = count;
+        if (count === 0) {
+          errorListContainer.style.display = "none";
         }
-      });
-      failedNAIs = failedNAIs.filter(c => c !== code);
-      const count = errorListBody.querySelectorAll(".error-item").length;
-      errorCount.innerText = count;
-      if (count === 0) {
-        errorListContainer.style.display = "none";
-      }
-    }
-
-    async function retryFailedNAIs() {
-      if (!apiSessionActive) {
-        alert("Primero conectá la API.");
-        return;
-      }
-      if (failedNAIs.length === 0) {
-        alert("No hay NAIs con error para reintentar.");
-        return;
       }
 
-      const codesToRetry = [...failedNAIs]; // Copy
-      const btnRetry = document.getElementById("btn-retry");
-      btnRetry.disabled = true;
-      btnRetry.innerHTML = "⏳ Esperando...";
+      async function retryFailedNAIs() {
+        if (!apiSessionActive) {
+          alert("Primero conectá la API.");
+          return;
+        }
+        if (failedNAIs.length === 0) {
+          alert("No hay NAIs con error para reintentar.");
+          return;
+        }
 
-      ubDetail.style.display = "block";
-      let retried = 0;
-      let fixed = 0;
+        const codesToRetry = [...failedNAIs]; // Copy
+        const btnRetry = document.getElementById("btn-retry");
+        btnRetry.disabled = true;
+        btnRetry.innerHTML = "⏳ Esperando...";
 
-      for (const code of codesToRetry) {
-        retried++;
-        ubDetail.innerText = `🔄 Reintentando ${retried}/${codesToRetry.length}...`;
-        btnRetry.innerHTML = `⏳ ${retried}/${codesToRetry.length}`;
-        updateProgress(retried, codesToRetry.length);
+        ubDetail.style.display = "block";
+        let retried = 0;
+        let fixed = 0;
 
-        // Delay to prevent overwhelming the proxy
-        await sleep(2000);
+        for (const code of codesToRetry) {
+          retried++;
+          ubDetail.innerText = `🔄 Reintentando ${retried}/${codesToRetry.length}...`;
+          btnRetry.innerHTML = `⏳ ${retried}/${codesToRetry.length}`;
+          updateProgress(retried, codesToRetry.length);
 
-        try {
-          const res = await fetch(getApiUrl("/process-nai"), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nai: code })
-          });
+          await sleep(500); // Small delay instead of large 2000ms delay
 
-          const resClone = res.clone();
-          let data;
           try {
-            data = await res.json();
-            const mode = document.getElementById("sel-api-channel").value;
-            if (mode === "proxy2" && data.contents) {
-              data = JSON.parse(data.contents);
-            }
-          } catch (e) {
-            const text = await resClone.text().catch(() => "Cuerpo inaccesible");
-            apiLog(`Falla JSON ${code}: ${text.substring(0, 30)}`);
-            addErrorToList(code, `Error HTTP ${res.status}: ${text.substring(0, 50)}`);
-            continue;
-          }
-
-          apiLog(`Respuesta ${code}: ${data.status || "OK"}`);
-          console.log(`Reintento para ${code}:`, data);
-
-          if (!res.ok) {
-            const errorMsg = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
-            addErrorToList(code, errorMsg);
-            continue;
-          }
-
-          if (data.recetas && data.recetas.length > 0) {
-            let naiTotal = 0;
-            let paciente = data.recetas[0].paciente || "Paciente Desconocido";
-            data.recetas.forEach(r => {
-              naiTotal += parseFloat(r.total_ub || 0);
+            const res = await fetch(getApiUrl("/process-nai"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nai: code }),
             });
 
-            totalUB += naiTotal;
-            ubValue.innerText = totalUB.toFixed(2);
-
-            if (window.markCodeProcessed) {
-              window.markCodeProcessed(code, naiTotal, paciente);
+            const resClone = res.clone();
+            let data;
+            try {
+              data = await res.json();
+            } catch (e) {
+              const text = await resClone
+                .text()
+                .catch(() => "Cuerpo inaccesible");
+              apiLog(`Falla JSON ${code}: ${text.substring(0, 30)}`);
+              addErrorToList(
+                code,
+                `Error HTTP ${res.status}: ${text.substring(0, 50)}`,
+              );
+              continue;
             }
 
-            addBreakdownItem(code, naiTotal, paciente);
-            removeErrorFromList(code);
-            fixed++;
-          } else {
-            addErrorToList(code, data.status || "Sin datos");
+            apiLog(`Respuesta ${code}: ${data.status || "OK"}`);
+            console.log(`Reintento para ${code}:`, data);
+
+            if (!res.ok) {
+              const errorMsg =
+                res.status === 404
+                  ? "NAI no encontrado en sistema"
+                  : data.error || data.status || `Error ${res.status}`;
+              addErrorToList(code, errorMsg);
+              continue;
+            }
+
+            if (data.recetas && data.recetas.length > 0) {
+              let naiTotal = 0;
+              let paciente = data.recetas[0].paciente || "Paciente Desconocido";
+              data.recetas.forEach((r) => {
+                naiTotal += parseFloat(r.total_ub || 0);
+              });
+
+              totalUB += naiTotal;
+              ubValue.innerText = totalUB.toFixed(2);
+
+              if (window.markCodeProcessed) {
+                window.markCodeProcessed(code, naiTotal, paciente);
+              }
+
+              addBreakdownItem(code, naiTotal, paciente);
+              removeErrorFromList(code);
+              fixed++;
+            } else {
+              addErrorToList(code, data.status || "Sin datos");
+            }
+          } catch (e) {
+            console.error(`Retry error ${code}:`, e);
+            addErrorToList(code, "Error de Red/API");
           }
-        } catch (e) {
-          console.error(`Retry error ${code}:`, e);
-          addErrorToList(code, "Error de Red/Proxy");
         }
+
+        progressContainer.style.display = "none";
+        btnRetry.disabled = false;
+        btnRetry.innerHTML = "🔄 Reintentar";
+
+        if (fixed > 0) {
+          playSuccess();
+          ubDetail.innerText = `✔ ${fixed}/${codesToRetry.length} recuperados en reintento`;
+        } else {
+          playError();
+          ubDetail.innerText = `⚠️ Ninguno recuperado en reintento`;
+        }
+        ubDetail.style.background = "rgba(255,255,255,0.3)";
       }
 
-      progressContainer.style.display = "none";
-      btnRetry.disabled = false;
-      btnRetry.innerHTML = "🔄 Reintentar";
-
-      if (fixed > 0) {
-        playSuccess();
-        ubDetail.innerText = `✔ ${fixed}/${codesToRetry.length} recuperados en reintento`;
-      } else {
-        playError();
-        ubDetail.innerText = `⚠️ Ninguno recuperado en reintento`;
-      }
-      ubDetail.style.background = "rgba(255,255,255,0.3)";
-    }
-
-    function addBreakdownItem(code, ub, paciente) {
-      breakdownContainer.style.display = "block";
-      const item = document.createElement("div");
-      item.className = "breakdown-item";
-      item.dataset.code = code;
-      item.dataset.ub = ub.toFixed(2);
-      item.dataset.paciente = paciente;
-      item.innerHTML = `
+      function addBreakdownItem(code, ub, paciente) {
+        breakdownContainer.style.display = "block";
+        const item = document.createElement("div");
+        item.className = "breakdown-item";
+        item.dataset.code = code;
+        item.dataset.ub = ub.toFixed(2);
+        item.dataset.paciente = paciente;
+        item.innerHTML = `
         <div>
           <div style="font-weight:bold; font-size:14px;">${code}</div>
           <div style="font-size:11px; color:#888;">${paciente}</div>
         </div>
         <span class="ub-val">+${ub.toFixed(2)} UB</span>
       `;
-      breakdownBody.appendChild(item);
-      const count = breakdownBody.querySelectorAll(".breakdown-item").length;
-      breakdownCount.innerText = count;
-    }
+        breakdownBody.appendChild(item);
+        const count = breakdownBody.querySelectorAll(".breakdown-item").length;
+        breakdownCount.innerText = count;
+      }
 
+      async function toggleApiSession() {
+        if (apiSessionActive) {
+          try {
+            const finalUrl = getApiUrl("/stop-session");
+            fetch(finalUrl, { method: "POST" }).catch((e) =>
+              console.warn("Error stopping session", e),
+            );
+          } catch (e) {
+            console.error(e);
+          } finally {
+            updateApiUI("disconnected");
+          }
+        } else {
+          updateApiUI("connecting");
+          try {
+            const today = new Date();
+            const startYear = today.getFullYear();
 
-    async function toggleApiSession() {
-      if (apiSessionActive) {
-        try {
-          const finalUrl = getApiUrl("/stop-session");
-          fetch(finalUrl, { method: "POST" }).catch(e => console.warn("Error stopping session", e));
-        } catch (e) {
-          console.error(e);
-        } finally {
-          updateApiUI("disconnected");
+            const payload = {
+              user: API_USER,
+              password: API_PASS,
+              fecha_desde: `01/01/${startYear}`,
+              fecha_hasta: `31/12/${startYear}`,
+              headless: true,
+            };
+
+            const finalUrl = getApiUrl("/start-session");
+
+            const res = await fetch(finalUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            if (!res.ok) {
+              const text = await res.text().catch(() => "Sin detalle");
+              throw new Error(`Error ${res.status}: ${text.substring(0, 40)}`);
+            }
+
+            let data = await res.json();
+
+            apiLog("Login OK: " + (data.status || "Iniciado"));
+            updateApiUI("connected");
+
+            // Process unprocessed codes
+            await processExistingCodes();
+          } catch (e) {
+            apiLog("Falla fatal: " + e.message);
+            let msg = e.message;
+            if (msg === "Failed to fetch" || msg.includes("fetch")) {
+              msg =
+                "Error de Red (Failed to fetch). Probablemente la API esté caída o bloqueando por CORS.";
+            }
+            alert("Error conectando a la API: " + msg);
+            updateApiUI("disconnected");
+          }
         }
-      } else {
-        updateApiUI("connecting");
+      }
+
+      // --- Process existing codes (only unprocessed ones) ---
+      async function processExistingCodes() {
+        if (!window.getAllCodes) {
+          console.warn("getAllCodes no disponible aún");
+          return;
+        }
+
+        ubDetail.style.display = "block";
+        ubDetail.innerText = "⏳ Cargando códigos...";
+
+        // Clear previous error/breakdown lists
+        errorListBody.innerHTML = "";
+        errorCount.innerText = "0";
+        errorListContainer.style.display = "none";
+        breakdownBody.innerHTML = "";
+        breakdownCount.innerText = "0";
+        breakdownContainer.style.display = "none";
+
+        const allCodes = await window.getAllCodes();
+
+        // Recalcular totalUB inicial desde el DB deduplicado para evitar saltos o duplicados
+        totalUB = 0;
+        const unprocessed = [];
+        const alreadyProcessedCodes = [];
+
+        allCodes.forEach((c) => {
+          if (c.ub_processed) {
+            totalUB += parseFloat(c.ub_value || 0);
+            alreadyProcessedCodes.push(c);
+          } else {
+            unprocessed.push(c);
+          }
+        });
+
+        // Actualizar UI con el total real deducido
+        ubValue.innerText = totalUB.toFixed(2);
+        alreadyProcessedCodes.forEach((c) => {
+          if (parseFloat(c.ub_value) > 0) {
+            addBreakdownItem(c.code, c.ub_value, "");
+          }
+        });
+
+        if (unprocessed.length === 0) {
+          ubDetail.innerText = `✔ Todo procesado (${allCodes.length} únicos)`;
+          progressContainer.style.display = "none";
+          return;
+        }
+
+        ubDetail.innerText = `⏳ Procesando 0/${unprocessed.length} NAIs únicos pendientes...`;
+
+        let processed = 0;
+
+        for (const codeObj of unprocessed) {
+          updateProgress(processed, unprocessed.length);
+
+          // Delay between requests
+          await sleep(1500);
+
+          try {
+            const res = await fetch(getApiUrl("/process-nai"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ nai: codeObj.code }),
+            });
+
+            const resClone = res.clone();
+            let data;
+            try {
+              data = await res.json();
+            } catch (e) {
+              const text = await resClone
+                .text()
+                .catch(() => "Cuerpo inaccesible");
+              apiLog(`Falla JSON ${codeObj.code}: ${text.substring(0, 30)}`);
+              addErrorToList(
+                codeObj.code,
+                `Err ${res.status}: ${text.substring(0, 50)}`,
+              );
+              processed++;
+              continue;
+            }
+
+            apiLog(`Respuesta ${codeObj.code}: ${data.status || "OK"}`);
+            console.log(`Respuesta API para ${codeObj.code}:`, data);
+
+            if (!res.ok) {
+              const errorMsg =
+                res.status === 404
+                  ? "NAI no encontrado en sistema"
+                  : data.error || data.status || `Error ${res.status}`;
+              addErrorToList(codeObj.code, errorMsg);
+              processed++;
+              continue;
+            }
+
+            if (data.recetas && data.recetas.length > 0) {
+              let naiTotal = 0;
+              let paciente = data.recetas[0].paciente || "Paciente Desconocido";
+              data.recetas.forEach((r) => {
+                naiTotal += parseFloat(r.total_ub || 0);
+              });
+
+              totalUB += naiTotal;
+              ubValue.innerText = totalUB.toFixed(2);
+
+              if (window.markCodeProcessed) {
+                window.markCodeProcessed(codeObj.code, naiTotal, paciente);
+              }
+
+              addBreakdownItem(codeObj.code, naiTotal, paciente);
+            } else {
+              const reason = data.status || data.error || "Sin datos";
+              addErrorToList(codeObj.code, reason);
+            }
+          } catch (e) {
+            console.error(`Error procesando ${codeObj.code}:`, e);
+            addErrorToList(codeObj.code, e.message || "Error de red");
+          }
+
+          processed++;
+          ubDetail.innerText = `⏳ Procesando ${processed}/${unprocessed.length} pendientes...`;
+          updateProgress(processed, unprocessed.length);
+        }
+
+        // Done
+        const errCount = errorListBody.querySelectorAll(".error-item").length;
+        if (errCount > 0) {
+          ubDetail.innerText = `✔ ${processed - errCount} procesados, ${errCount} errores`;
+          playError();
+        } else {
+          ubDetail.innerText = `✔ ${unprocessed.length} códigos procesados`;
+          playSuccess();
+        }
+        ubDetail.style.background = "rgba(255,255,255,0.3)";
+        progressContainer.style.display = "none";
+      }
+
+      async function processUbApi(nai) {
+        if (!apiSessionActive) return null;
+
         try {
-          const today = new Date();
-          const startYear = today.getFullYear();
+          ubDetail.style.display = "block";
+          ubDetail.innerText = "⏳ Buscando en API...";
 
-          const payload = {
-            user: API_USER,
-            password: API_PASS,
-            fecha_desde: `01/01/${startYear}`,
-            fecha_hasta: `31/12/${startYear}`,
-            headless: true
-          };
-
-          const finalUrl = getApiUrl("/start-session");
+          const finalUrl = getApiUrl("/process-nai");
 
           const res = await fetch(finalUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ nai: nai }),
           });
 
-          if (!res.ok) {
-            const text = await res.text().catch(() => "Sin detalle");
-            throw new Error(`Error ${res.status}: ${text.substring(0, 40)}`);
-          }
-
-          let data = await res.json();
-          const mode = document.getElementById("sel-api-channel").value;
-          if (mode === "proxy2" && data.contents) {
-            data = JSON.parse(data.contents);
-          }
-
-          apiLog("Login OK: " + (data.status || "Iniciado"));
-          updateApiUI("connected");
-
-          // Process unprocessed codes
-          await processExistingCodes();
-
-        } catch (e) {
-          apiLog("Falla fatal: " + e.message);
-          let msg = e.message;
-          if (msg === "Failed to fetch" || msg.includes("fetch")) {
-            const mode = document.getElementById("sel-api-channel").value;
-            if (mode === "direct") {
-              msg = "Error de Red (Failed to fetch). Probablemente Chrome bloquea el pedido. Asegurate de tener activado el switch en la extensión CORS.";
-            } else {
-              msg = "Error de Red / Timeout. Los proxies gratuitos cortan a los 30 segundos. Si este NAI es lento, intentá con Modo Directo.";
-            }
-          }
-          alert("Error conectando a la API: " + msg);
-          updateApiUI("disconnected");
-        }
-      }
-    }
-
-    // --- Process existing codes (only unprocessed ones) ---
-    async function processExistingCodes() {
-      if (!window.getAllCodes) {
-        console.warn("getAllCodes no disponible aún");
-        return;
-      }
-
-      ubDetail.style.display = "block";
-      ubDetail.innerText = "⏳ Cargando códigos...";
-
-      // Clear previous error/breakdown lists
-      errorListBody.innerHTML = "";
-      errorCount.innerText = "0";
-      errorListContainer.style.display = "none";
-      breakdownBody.innerHTML = "";
-      breakdownCount.innerText = "0";
-      breakdownContainer.style.display = "none";
-
-      const allCodes = await window.getAllCodes();
-
-      // Recalcular totalUB inicial desde el DB deduplicado para evitar saltos o duplicados
-      totalUB = 0;
-      const unprocessed = [];
-      const alreadyProcessedCodes = [];
-
-      allCodes.forEach(c => {
-        if (c.ub_processed) {
-          totalUB += parseFloat(c.ub_value || 0);
-          alreadyProcessedCodes.push(c);
-        } else {
-          unprocessed.push(c);
-        }
-      });
-
-      // Actualizar UI con el total real deducido
-      ubValue.innerText = totalUB.toFixed(2);
-      alreadyProcessedCodes.forEach(c => {
-        if (parseFloat(c.ub_value) > 0) {
-          addBreakdownItem(c.code, c.ub_value, "");
-        }
-      });
-
-      if (unprocessed.length === 0) {
-        ubDetail.innerText = `✔ Todo procesado (${allCodes.length} únicos)`;
-        progressContainer.style.display = "none";
-        return;
-      }
-
-      ubDetail.innerText = `⏳ Procesando 0/${unprocessed.length} NAIs únicos pendientes...`;
-
-      let processed = 0;
-
-      for (const codeObj of unprocessed) {
-        updateProgress(processed, unprocessed.length);
-
-        // Delay between requests
-        await sleep(1500);
-
-        try {
-          const res = await fetch(getApiUrl("/process-nai"), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ nai: codeObj.code })
-          });
-
-          const resClone = res.clone();
           let data;
           try {
             data = await res.json();
-            const mode = document.getElementById("sel-api-channel").value;
-            if (mode === "proxy2" && data.contents) {
-              data = JSON.parse(data.contents);
-            }
           } catch (e) {
-            const text = await resClone.text().catch(() => "Cuerpo inaccesible");
-            apiLog(`Falla JSON ${codeObj.code}: ${text.substring(0, 30)}`);
-            addErrorToList(codeObj.code, `Err ${res.status}: ${text.substring(0, 50)}`);
-            processed++;
-            continue;
+            const text = await res
+              .clone()
+              .text()
+              .catch(() => "");
+            const msg = `Error ${res.status}: ${text.substring(0, 30) || "Invalid JSON"}`;
+            ubDetail.innerText = `❌ ${msg}`;
+            addErrorToList(nai, msg);
+            return { found: false };
           }
 
-          apiLog(`Respuesta ${codeObj.code}: ${data.status || "OK"}`);
-          console.log(`Respuesta API para ${codeObj.code}:`, data);
+          console.log("API Process Individual:", data);
 
           if (!res.ok) {
-            const errorMsg = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
-            addErrorToList(codeObj.code, errorMsg);
-            processed++;
-            continue;
+            let reason =
+              res.status === 404
+                ? "NAI no encontrado en sistema"
+                : data.error || data.status || `Error ${res.status}`;
+            if (res.status === 504 || res.status === 502)
+              reason = "Timeout de API (Respuesta lenta)";
+
+            ubDetail.innerText = `❌ ${reason}`;
+            addErrorToList(nai, reason);
+            return { found: false };
           }
 
           if (data.recetas && data.recetas.length > 0) {
             let naiTotal = 0;
             let paciente = data.recetas[0].paciente || "Paciente Desconocido";
-            data.recetas.forEach(r => {
+            data.recetas.forEach((r) => {
               naiTotal += parseFloat(r.total_ub || 0);
             });
 
             totalUB += naiTotal;
             ubValue.innerText = totalUB.toFixed(2);
 
-            if (window.markCodeProcessed) {
-              window.markCodeProcessed(codeObj.code, naiTotal, paciente);
-            }
+            ubDetail.innerText = `✔ ${paciente} (+${naiTotal.toFixed(2)})`;
+            ubDetail.style.background = "rgba(255,255,255,0.3)";
 
-            addBreakdownItem(codeObj.code, naiTotal, paciente);
+            addBreakdownItem(nai, naiTotal, paciente);
+
+            return {
+              found: true,
+              total_ub: naiTotal,
+              paciente: paciente,
+              details: data.recetas,
+            };
           } else {
-            const reason = data.status || data.error || "Sin datos";
-            addErrorToList(codeObj.code, reason);
+            const reason = data.status || "No encontrado";
+            ubDetail.innerText = `❌ ${reason}`;
+            ubDetail.style.background = "rgba(0,0,0,0.1)";
+            addErrorToList(nai, reason);
+            return { found: false };
           }
         } catch (e) {
-          console.error(`Error procesando ${codeObj.code}:`, e);
-          addErrorToList(codeObj.code, e.message || "Error de red");
+          console.error("API Error processing NAI", e);
+          ubDetail.innerText = "⚠️ Error API";
+          addErrorToList(nai, e.message || "Error");
+          return { error: e };
         }
+      }
+    </script>
 
-        processed++;
-        ubDetail.innerText = `⏳ Procesando ${processed}/${unprocessed.length} pendientes...`;
-        updateProgress(processed, unprocessed.length);
+    <!-- 2. SCRIPT DEL SCANNER -->
+    <script>
+      const resultDiv = document.getElementById("result");
+      const readerId = "reader";
+      const html5QrCode = new Html5Qrcode(readerId);
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
       }
 
-      // Done
-      const errCount = errorListBody.querySelectorAll(".error-item").length;
-      if (errCount > 0) {
-        ubDetail.innerText = `✔ ${processed - errCount} procesados, ${errCount} errores`;
-        playError();
-      } else {
-        ubDetail.innerText = `✔ ${unprocessed.length} códigos procesados`;
-        playSuccess();
-      }
-      ubDetail.style.background = "rgba(255,255,255,0.3)";
-      progressContainer.style.display = "none";
-    }
+      window.restartScanner = function () {
+        resultDiv.innerHTML = "Esperando lectura...";
+        document.getElementById("debug-log").style.display = "none";
 
-    async function processUbApi(nai) {
-      if (!apiSessionActive) return null;
-
-      try {
-        ubDetail.style.display = "block";
-        ubDetail.innerText = "⏳ Buscando en API...";
-
-        const finalUrl = getApiUrl("/process-nai");
-
-        const res = await fetch(finalUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nai: nai })
-        });
-
-        let data;
-        try {
-          data = await res.json();
-          const mode = document.getElementById("sel-api-channel").value;
-          if (mode === "proxy2" && data.contents) {
-            data = JSON.parse(data.contents);
-          }
-        } catch (e) {
-          const text = await res.clone().text().catch(() => "");
-          const msg = `Error ${res.status}: ${text.substring(0, 30) || "Invalid JSON"}`;
-          ubDetail.innerText = `❌ ${msg}`;
-          addErrorToList(nai, msg);
-          return { found: false };
-        }
-
-        console.log("API Process Individual:", data);
-
-        if (!res.ok) {
-          let reason = res.status === 404 ? "NAI no encontrado en sistema" : (data.error || data.status || `Error ${res.status}`);
-          if (res.status === 504 || res.status === 502) reason = "Timeout de Proxy (Respuesta lenta)";
-
-          ubDetail.innerText = `❌ ${reason}`;
-          addErrorToList(nai, reason);
-          return { found: false };
-        }
-
-        if (data.recetas && data.recetas.length > 0) {
-          let naiTotal = 0;
-          let paciente = data.recetas[0].paciente || "Paciente Desconocido";
-          data.recetas.forEach(r => {
-            naiTotal += parseFloat(r.total_ub || 0);
-          });
-
-          totalUB += naiTotal;
-          ubValue.innerText = totalUB.toFixed(2);
-
-          ubDetail.innerText = `✔ ${paciente} (+${naiTotal.toFixed(2)})`;
-          ubDetail.style.background = "rgba(255,255,255,0.3)";
-
-          addBreakdownItem(nai, naiTotal, paciente);
-
-          return {
-            found: true,
-            total_ub: naiTotal,
-            paciente: paciente,
-            details: data.recetas
-          };
-        } else {
-          const reason = data.status || "No encontrado";
-          ubDetail.innerText = `❌ ${reason}`;
-          ubDetail.style.background = "rgba(0,0,0,0.1)";
-          addErrorToList(nai, reason);
-          return { found: false };
-        }
-
-      } catch (e) {
-        console.error("API Error processing NAI", e);
-        ubDetail.innerText = "⚠️ Error API";
-        addErrorToList(nai, e.message || "Error");
-        return { error: e };
-      }
-    }
-  </script>
-
-  <!-- 2. SCRIPT DEL SCANNER -->
-  <script>
-    const resultDiv = document.getElementById("result");
-    const readerId = "reader";
-    const html5QrCode = new Html5Qrcode(readerId);
-
-    function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-
-    window.restartScanner = function () {
-      resultDiv.innerHTML = "Esperando lectura...";
-      document.getElementById("debug-log").style.display = "none";
-
-      if (html5QrCode.isScanning) {
-        console.log("Scanner ya activo");
-        return;
-      }
-
-      startScanner();
-    }
-
-    function logError(msg, err) {
-      console.error(msg, err);
-      const log = document.getElementById("debug-log");
-      log.style.display = "block";
-      log.innerHTML += `<p>${msg}: ${err?.message || err}</p>`;
-    }
-
-    async function startScanner() {
-      try {
-        await html5QrCode.start(
-          { facingMode: "environment" },
-          {
-            fps: 10,
-            qrbox: { width: 320, height: 160 },
-            formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39],
-            experimentalFeatures: {
-              useBarCodeDetectorIfSupported: true
-            }
-          },
-          (decodedText) => {
-            const now = Date.now();
-            if (!window.lastScanTime) window.lastScanTime = 0;
-            
-            // Evitar escanear el MISMO código rápidamente (cooldown de 3 segundos)
-            if (window.lastScannedCode === decodedText && now - window.lastScanTime < 3000) {
-              return;
-            }
-            // Evitar cualquier escaneo súper rápido en cadena (cooldown de 1.5 segundos)
-            if (now - window.lastScanTime < 1500) {
-              return;
-            }
-
-            window.lastScannedCode = decodedText;
-            window.lastScanTime = now;
-
-            if (window.checkAndSaveCode) {
-              window.checkAndSaveCode(decodedText);
-            } else {
-              alert("Base de datos no cargada aún. Código: " + decodedText);
-            }
-
-            // Restaurar texto de espera si está libre y pasaron unos segundos
-            setTimeout(() => {
-              const res = document.getElementById("result");
-              if (res && res.innerHTML.includes("GUARDADO")) {
-                res.innerHTML = "Esperando lectura...";
-              }
-            }, 4000);
-          }
-        );
-      } catch (err) {
-        logError("Error iniciando cámara", err);
-        resultDiv.innerHTML = "❌ Error de cámara (ver abajo)";
-      }
-
-      try {
-        await sleep(1000);
         if (html5QrCode.isScanning) {
-          const caps = html5QrCode.getRunningTrackCapabilities();
-          if (caps.zoom && caps.zoom.max > 1) {
-            await html5QrCode.applyVideoConstraints({ advanced: [{ zoom: Math.min(2.0, caps.zoom.max) }] });
-          }
+          console.log("Scanner ya activo");
+          return;
         }
-      } catch (e) {
-        console.log("Zoom no soportado/necesario", e);
+
+        startScanner();
+      };
+
+      function logError(msg, err) {
+        console.error(msg, err);
+        const log = document.getElementById("debug-log");
+        log.style.display = "block";
+        log.innerHTML += `<p>${msg}: ${err?.message || err}</p>`;
       }
-    }
 
-    // --- ACCESS CONTROL SYSTEM ---
-    window.isLoggedIn = false;
-    const adminControls = document.getElementById("admin-controls");
-    const loginBtn = document.getElementById("btn-login");
+      async function startScanner() {
+        try {
+          await html5QrCode.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 320, height: 160 },
+              formatsToSupport: [Html5QrcodeSupportedFormats.CODE_39],
+              experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true,
+              },
+            },
+            (decodedText) => {
+              const now = Date.now();
+              if (!window.lastScanTime) window.lastScanTime = 0;
 
-    window.toggleLogin = function () {
-      if (window.isLoggedIn) {
-        // Logout
-        window.isLoggedIn = false;
-        window.updateAuthUI();
-      } else {
-        // Show Login Modal
-        window.pendingDocId = "LOGIN_ACTION";
-        const modal = document.getElementById("auth-modal");
-        const btn = modal.querySelector("button[onclick*='confirm']"); // The confirm button
-        const title = modal.querySelector("h3");
-        const msg = modal.querySelector("p");
+              // Evitar escanear el MISMO código rápidamente (cooldown de 3 segundos)
+              if (
+                window.lastScannedCode === decodedText &&
+                now - window.lastScanTime < 3000
+              ) {
+                return;
+              }
+              // Evitar cualquier escaneo súper rápido en cadena (cooldown de 1.5 segundos)
+              if (now - window.lastScanTime < 1500) {
+                return;
+              }
 
-        if (title) title.innerText = "🔐 Acceso Admin";
-        if (msg) msg.innerText = "Ingrese su clave de acceso:";
-        if (btn) btn.innerText = "Ingresar";
+              window.lastScannedCode = decodedText;
+              window.lastScanTime = now;
 
-        modal.style.display = "flex";
-        document.getElementById("admin-pass").focus();
+              if (window.checkAndSaveCode) {
+                window.checkAndSaveCode(decodedText);
+              } else {
+                alert("Base de datos no cargada aún. Código: " + decodedText);
+              }
+
+              // Restaurar texto de espera si está libre y pasaron unos segundos
+              setTimeout(() => {
+                const res = document.getElementById("result");
+                if (res && res.innerHTML.includes("GUARDADO")) {
+                  res.innerHTML = "Esperando lectura...";
+                }
+              }, 4000);
+            },
+          );
+        } catch (err) {
+          logError("Error iniciando cámara", err);
+          resultDiv.innerHTML = "❌ Error de cámara (ver abajo)";
+        }
+
+        try {
+          await sleep(1000);
+          if (html5QrCode.isScanning) {
+            const caps = html5QrCode.getRunningTrackCapabilities();
+            if (caps.zoom && caps.zoom.max > 1) {
+              await html5QrCode.applyVideoConstraints({
+                advanced: [{ zoom: Math.min(2.0, caps.zoom.max) }],
+              });
+            }
+          }
+        } catch (e) {
+          console.log("Zoom no soportado/necesario", e);
+        }
       }
-    };
 
-    window.updateAuthUI = function () {
-      // Re-fetch in case of stale references (though usually fine)
+      // --- ACCESS CONTROL SYSTEM ---
+      window.isLoggedIn = false;
       const adminControls = document.getElementById("admin-controls");
       const loginBtn = document.getElementById("btn-login");
 
-      if (window.isLoggedIn) {
-        document.body.classList.add("logged-in");
-        if (adminControls) adminControls.style.display = "block";
-        if (loginBtn) {
-          loginBtn.innerText = "� Salir";
-          loginBtn.style.background = "#444";
+      window.toggleLogin = function () {
+        if (window.isLoggedIn) {
+          // Logout
+          window.isLoggedIn = false;
+          window.updateAuthUI();
+        } else {
+          // Show Login Modal
+          window.pendingDocId = "LOGIN_ACTION";
+          const modal = document.getElementById("auth-modal");
+          const btn = modal.querySelector("button[onclick*='confirm']"); // The confirm button
+          const title = modal.querySelector("h3");
+          const msg = modal.querySelector("p");
+
+          if (title) title.innerText = "🔐 Acceso Admin";
+          if (msg) msg.innerText = "Ingrese su clave de acceso:";
+          if (btn) btn.innerText = "Ingresar";
+
+          modal.style.display = "flex";
+          document.getElementById("admin-pass").focus();
         }
-      } else {
-        document.body.classList.remove("logged-in");
-        if (adminControls) adminControls.style.display = "none";
-        if (loginBtn) {
-          loginBtn.innerText = "🔒 Login";
-          loginBtn.style.background = "#9e2a2b";
+      };
+
+      window.updateAuthUI = function () {
+        // Re-fetch in case of stale references (though usually fine)
+        const adminControls = document.getElementById("admin-controls");
+        const loginBtn = document.getElementById("btn-login");
+
+        if (window.isLoggedIn) {
+          document.body.classList.add("logged-in");
+          if (adminControls) adminControls.style.display = "block";
+          if (loginBtn) {
+            loginBtn.innerText = "� Salir";
+            loginBtn.style.background = "#444";
+          }
+        } else {
+          document.body.classList.remove("logged-in");
+          if (adminControls) adminControls.style.display = "none";
+          if (loginBtn) {
+            loginBtn.innerText = "🔒 Login";
+            loginBtn.style.background = "#9e2a2b";
+          }
         }
-      }
-    }
+      };
 
-    startScanner();
-  </script>
-
-</body>
-
+      startScanner();
+    </script>
+  </body>
 </html>
