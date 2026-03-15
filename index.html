@@ -942,17 +942,6 @@
       let db;
       let CODES_COLLECTION = "codigos_barras";
 
-      try {
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-        console.log("✅ Firebase inicializado correctamente");
-
-        startHistoryListener();
-        loadPersistedUB();
-      } catch (e) {
-        console.error("❌ Error inicializando Firebase:", e);
-      }
-
       // --- LOAD PERSISTED UB ON PAGE LOAD ---
       window.loadPersistedUB = async function () {
         try {
@@ -1585,6 +1574,16 @@
           console.error("Error marcando código procesado:", e);
         }
       };
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        console.log("✅ Firebase inicializado correctamente");
+
+        window.startHistoryListener();
+        window.loadPersistedUB();
+      } catch (e) {
+        console.error("❌ Error inicializando Firebase:", e);
+      }
     </script>
 
     <!-- 1.5 SCRIPT API UBS INTEGRATION -->
