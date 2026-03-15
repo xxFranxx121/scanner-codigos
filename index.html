@@ -903,6 +903,21 @@
           window.toggleApiSession();
         }
 
+        // Limpiar listas y UI temporalmente hasta cargar nuevos datos
+        const bdBody = document.getElementById("breakdown-body");
+        if (bdBody) bdBody.innerHTML = "";
+        const bdCount = document.getElementById("breakdown-count");
+        if (bdCount) bdCount.innerText = "0";
+        const bdCont = document.getElementById("breakdown-container");
+        if (bdCont) bdCont.style.display = "none";
+
+        const errBody = document.getElementById("error-list-body");
+        if (errBody) errBody.innerHTML = "";
+        const errCount = document.getElementById("error-count");
+        if (errCount) errCount.innerText = "0";
+        const errCont = document.getElementById("error-list-container");
+        if (errCont) errCont.style.display = "none";
+
         // Recargar datos locales y el listener de Firebase
         if (window.loadPersistedUB) window.loadPersistedUB();
         if (window.startHistoryListener) window.startHistoryListener();
@@ -960,6 +975,12 @@
           window._persistedTotalUB = total;
           window._persistedCount = processedCount;
 
+          if (typeof totalUB !== "undefined") {
+            totalUB = total; // Sync the variable correctly across scripts!
+          } else {
+            window.totalUB = total;
+          }
+
           const ubDisplay = document.getElementById("ub-display");
           const ubValue = document.getElementById("total-ub-value");
           const ubDetail = document.getElementById("last-ub-detail");
@@ -970,6 +991,9 @@
             ubDetail.style.display = "block";
             ubDetail.innerText = `📦 ${processedCount} códigos cargados de Firebase`;
             ubDetail.style.background = "rgba(255,255,255,0.2)";
+          } else {
+            ubValue.innerText = "0.00";
+            ubDetail.style.display = "none";
           }
         } catch (e) {
           console.error("Error cargando UB persistidas:", e);
@@ -1604,7 +1628,7 @@
       }
 
       let apiSessionActive = false;
-      let totalUB = window._persistedTotalUB || 0.0;
+      var totalUB = window._persistedTotalUB || 0.0; // Var instead of Let allows global sync from module
 
       // UI Elements
       const btnConnect = document.getElementById("btn-connect");
@@ -1628,7 +1652,7 @@
       // Direct connection is always used now since CORS is fixed on the backend.
 
       // Initialize from persisted (with deduplication safety)
-      if (window._persistedTotalUB) {
+      if (typeof window._persistedTotalUB !== "undefined") {
         totalUB = window._persistedTotalUB;
         ubValue.innerText = totalUB.toFixed(2);
       }
